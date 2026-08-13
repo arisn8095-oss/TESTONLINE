@@ -3,13 +3,10 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>EduSecure CBT Enterprise v5.0 - Sistem Ujian Anti-Curang</title>
+  <title>EduSecure CBT Enterprise v5.0 - Anti Cheat System</title>
   
-  <!-- Tailwind CSS & FontAwesome Icons -->
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  
-  <!-- SheetJS for Excel Exports -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
   <script>
@@ -66,7 +63,9 @@
 </head>
 <body class="h-full font-sans antialiased bg-slate-900 text-slate-100 flex flex-col user-select-none overflow-x-hidden" oncontextmenu="return false;">
 
-  <!-- CHEAT DETECTED HARD LOCK OVERLAY -->
+  <div id="toastContainer" class="fixed bottom-5 right-5 z-[99999] flex flex-col gap-2 max-w-sm pointer-events-none"></div>
+
+  <!-- Cheat Lockout Screen Modal -->
   <div id="cheatLockModal" class="hidden fixed inset-0 z-[99999] bg-red-950/95 cheat-overlay flex items-center justify-center p-4">
     <div class="bg-slate-900 border-2 border-red-600 rounded-2xl max-w-lg w-full p-6 text-center shadow-2xl space-y-4">
       <div class="w-20 h-20 bg-red-600/20 text-red-500 rounded-full flex items-center justify-center mx-auto text-4xl animate-pulse">
@@ -82,9 +81,8 @@
         <div><span class="text-slate-400">Jumlah Pelanggaran:</span> <span id="lockViolationCount">3</span> Kali</div>
       </div>
 
-      <!-- Quick Teacher PIN Override for Demo & Live Testing -->
       <div class="bg-slate-800 p-3 rounded-xl border border-slate-700 text-left space-y-2">
-        <label class="block text-xs text-slate-300 font-semibold">Buka Kunci Pengawas (PIN Guru: <span class="text-amber-400 font-mono font-bold">1234</span>)</label>
+        <label class="block text-xs text-slate-300 font-semibold">Buka Kunci Pengawas (PIN Guru Demo: <span class="text-amber-400 font-mono font-bold">1234</span>)</label>
         <div class="flex gap-2">
           <input type="password" id="teacherPinInput" placeholder="Masukkan PIN 1234" class="flex-1 bg-slate-900 border border-slate-700 rounded-lg px-3 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
           <button onclick="unlockWithTeacherPin()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 px-4 py-1.5 rounded-lg text-xs font-bold transition">
@@ -101,7 +99,7 @@
     </div>
   </div>
 
-  <!-- WARNING CHEAT TOAST -->
+  <!-- Cheat Warning Banner Modal -->
   <div id="cheatWarningModal" class="hidden fixed top-6 left-1/2 -translate-x-1/2 z-[9999] max-w-md w-full px-4">
     <div class="bg-amber-500 text-slate-950 p-4 rounded-xl shadow-2xl border-2 border-amber-300 flex items-start gap-3 animate-bounce">
       <i class="fa-solid fa-shield-cat text-2xl mt-1"></i>
@@ -114,7 +112,6 @@
     </div>
   </div>
 
-  <!-- MAIN SYSTEM HEADER -->
   <header class="bg-slate-800/90 border-b border-slate-700 backdrop-blur sticky top-0 z-40">
     <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
       <div class="flex items-center gap-3">
@@ -125,11 +122,10 @@
           <h1 class="text-base font-bold text-white tracking-wide flex items-center gap-2">
             EduSecure CBT <span class="bg-emerald-500/10 text-emerald-400 border border-emerald-500/30 text-[10px] px-2 py-0.5 rounded-full uppercase font-mono">Enterprise v5.0</span>
           </h1>
-          <p class="text-xs text-slate-400">Sistem Ujian Online Ultra-Secure Anti-Bocor & Anti-Split Screen</p>
+          <p class="text-xs text-slate-400">Sistem Ujian Online Ultra-Secure Anti-Bocor & Sync Google Sheets</p>
         </div>
       </div>
 
-      <!-- Current Logged In User Navigation Pill -->
       <div id="userHeaderBar" class="flex items-center gap-3">
         <div class="text-right hidden sm:block">
           <div id="navUserName" class="text-sm font-semibold text-slate-200">Belum Login</div>
@@ -144,7 +140,7 @@
 
   <main class="flex-1 flex flex-col relative max-w-7xl w-full mx-auto p-4 sm:p-6">
 
-    <!-- VIEW 1: LOGIN PORTAL -->
+    <!-- LOGIN VIEW -->
     <section id="loginView" class="flex-1 flex flex-col items-center justify-center py-6">
       <div class="max-w-md w-full bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-2xl relative overflow-hidden">
         <div class="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl"></div>
@@ -154,10 +150,9 @@
             <i class="fa-solid fa-lock text-3xl"></i>
           </div>
           <h2 class="text-2xl font-bold text-white">Portal Masuk CBT</h2>
-          <p class="text-slate-400 text-xs mt-1">Satu perangkat terkunci untuk 1 user aktif.</p>
+          <p class="text-slate-400 text-xs mt-1">Setiap akun guru memegang khusus 1 mata pelajaran.</p>
         </div>
 
-        <!-- Role Selector Tabs -->
         <div class="grid grid-cols-3 gap-1 bg-slate-900 p-1 rounded-xl mb-6 text-xs font-bold text-slate-400">
           <button id="tabRoleMurid" type="button" onclick="setLoginRole('murid')" class="py-2 rounded-lg transition text-white bg-slate-800 shadow">Murid (NIS)</button>
           <button id="tabRoleGuru" type="button" onclick="setLoginRole('guru')" class="py-2 rounded-lg transition">Guru (NIP)</button>
@@ -181,28 +176,39 @@
             </div>
           </div>
 
-          <!-- Quick Fill Demo Accounts -->
-          <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-xs space-y-1 text-slate-400">
-            <span class="font-bold text-slate-300 block mb-1">Pilih Akun Demo Instan:</span>
+      <!--    <div class="bg-slate-900/60 border border-slate-700/60 rounded-xl p-3 text-xs space-y-2 text-slate-400">
+            <span class="font-bold text-slate-300 block">Pilih Akun Demo Instan:</span>
             <div class="flex flex-wrap gap-1.5">
-              <button type="button" onclick="quickFill('murid')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-emerald-400 border border-slate-600">Murid (NIS: 1001)</button>
-              <button type="button" onclick="quickFill('guru')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-teal-400 border border-slate-600">Guru (NIP: 19850001)</button>
-              <button type="button" onclick="quickFill('admin')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-amber-400 border border-slate-600">Admin Utama</button>
+              <button type="button" onclick="quickFill('murid')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-emerald-400 border border-slate-600">
+                <i class="fa-solid fa-user-graduate"></i> Murid (NIS 1001)
+              </button>
+              <button type="button" onclick="quickFill('guru1')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-teal-400 border border-slate-600">
+                <i class="fa-solid fa-chalkboard-user"></i> Guru Informatika (19850001)
+              </button>
+              <button type="button" onclick="quickFill('guru2')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-sky-400 border border-slate-600">
+                <i class="fa-solid fa-chalkboard-user"></i> Guru Fisika (19850002)
+              </button>
+              <button type="button" onclick="quickFill('guru3')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-indigo-400 border border-slate-600">
+                <i class="fa-solid fa-chalkboard-user"></i> Guru Matematika (19850003)
+              </button>
+              <button type="button" onclick="quickFill('admin')" class="px-2 py-1 bg-slate-800 hover:bg-slate-700 rounded text-amber-400 border border-slate-600">
+                <i class="fa-solid fa-user-shield"></i> Admin Utama
+              </button>
             </div>
           </div>
-
+-->
           <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl transition shadow-lg shadow-emerald-900/30 flex items-center justify-center gap-2 text-sm">
             <i class="fa-solid fa-shield"></i> Masuk Ke Sistem Ujian
           </button>
         </form>
 
         <div class="mt-4 pt-4 border-t border-slate-700/50 text-center text-[11px] text-slate-500 flex items-center justify-center gap-2">
-          <i class="fa-solid fa-lock text-emerald-500"></i> Hardware Binding Token Active &bull; Single Session Locked
+          <i class="fa-solid fa-lock text-emerald-500"></i> Google Sheets Data Auto-Sync Active
         </div>
       </div>
     </section>
 
-    <!-- VIEW 2: MURID DASHBOARD -->
+    <!-- MURID DASHBOARD -->
     <section id="muridDashboardView" class="hidden space-y-6">
       <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -211,7 +217,7 @@
             <span class="text-xs text-slate-400" id="muridClassBadge">Kelas: XII IPA 1</span>
           </div>
           <h2 class="text-2xl font-bold text-white mt-1" id="muridNameDisplay">Ahmad Risky</h2>
-          <p class="text-slate-400 text-xs mt-0.5">Pilih mata pelajaran dan paket soal aktif di bawah, lalu masukkan Token Keamanan dari guru.</p>
+          <p class="text-slate-400 text-xs mt-0.5">Pilih mata pelajaran dan paket soal aktif di bawah, lalu masukkan Token Keamanan dari guru pengampu.</p>
         </div>
 
         <div class="bg-slate-900 p-3 rounded-xl border border-slate-700 text-xs text-slate-300 space-y-1">
@@ -220,22 +226,19 @@
         </div>
       </div>
 
-      <!-- Active Exams Grid for Student -->
       <div>
         <h3 class="font-bold text-white text-base mb-4 flex items-center gap-2">
           <i class="fa-solid fa-file-pen text-emerald-400"></i> Daftar Ujian & Soal Aktif Hari Ini
         </h3>
 
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="studentExamListGrid">
-          <!-- Dynamic Populated Exams with Token Input -->
+          <!-- Dynamic Populated Exams -->
         </div>
       </div>
     </section>
 
-    <!-- VIEW 3: MURID CBT TEST VIEW -->
+    <!-- MURID TEST ENGINE VIEW -->
     <section id="muridTestView" class="hidden flex-1 flex flex-col space-y-4">
-      
-      <!-- Secure CBT Top Toolbar -->
       <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-4 shadow-xl">
         <div class="flex items-center gap-3">
           <div class="w-10 h-10 bg-slate-900 rounded-xl border border-slate-700 flex items-center justify-center text-emerald-400 font-bold">
@@ -243,18 +246,16 @@
           </div>
           <div>
             <div class="text-sm font-bold text-white" id="cbtStudentName">Ahmad Risky (NIS: 1001)</div>
-            <div class="text-xs text-slate-400">Mapel: <span class="text-emerald-400 font-semibold" id="cbtSubjectTitle">Matematika</span> &bull; <span id="cbtPaketTitle" class="text-amber-400 font-bold">Paket A</span></div>
+            <div class="text-xs text-slate-400">Mapel: <span class="text-emerald-400 font-semibold" id="cbtSubjectTitle">Informatika</span> &bull; <span id="cbtPaketTitle" class="text-amber-400 font-bold">Paket A</span></div>
           </div>
         </div>
 
         <div class="flex items-center gap-4">
-          <!-- Anti Cheat Shield Status Pill -->
           <div class="bg-emerald-950/80 border border-emerald-500/50 text-emerald-300 text-xs px-3 py-1.5 rounded-xl flex items-center gap-2">
             <i class="fa-solid fa-shield-halved text-emerald-400 animate-pulse"></i>
             <span class="font-mono font-bold">SECURE LOCKDOWN ACTIVE</span>
           </div>
 
-          <!-- Timer Clock -->
           <div class="bg-slate-900 border border-slate-700 px-4 py-1.5 rounded-xl text-right">
             <div class="text-[10px] text-slate-400 uppercase font-bold">Sisa Waktu</div>
             <div id="cbtTimerDisplay" class="text-base font-mono font-black text-amber-400">01:30:00</div>
@@ -262,14 +263,9 @@
         </div>
       </div>
 
-      <!-- Main Test Question View & Palette Layout -->
       <div class="flex-1 grid grid-cols-1 lg:grid-cols-4 gap-6">
-        
-        <!-- Left 3 Columns: Active Question Area -->
         <div class="lg:col-span-3 bg-slate-800 border border-slate-700 rounded-2xl p-6 flex flex-col justify-between shadow-xl min-h-[500px]">
-          
           <div class="space-y-6">
-            <!-- Question Top Status -->
             <div class="flex items-center justify-between border-b border-slate-700/80 pb-3">
               <span class="text-sm font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-2">
                 Soal Nomor <span id="currentQNum" class="text-lg text-white font-mono bg-slate-900 px-2.5 py-0.5 rounded-lg border border-slate-700">1</span>
@@ -279,18 +275,10 @@
               </span>
             </div>
 
-            <!-- Question Text Body -->
-            <div id="cbtQuestionBody" class="space-y-4 text-slate-200 text-base leading-relaxed">
-              <!-- Rendered Question & Attachments -->
-            </div>
-
-            <!-- Answer Options Container -->
-            <div id="cbtAnswersContainer" class="space-y-3 pt-2">
-              <!-- Dynamic Options based on 5 types -->
-            </div>
+            <div id="cbtQuestionBody" class="space-y-4 text-slate-200 text-base leading-relaxed"></div>
+            <div id="cbtAnswersContainer" class="space-y-3 pt-2"></div>
           </div>
 
-          <!-- Question Footer Navigation Buttons -->
           <div class="pt-6 mt-6 border-t border-slate-700/80 flex items-center justify-between gap-2">
             <button id="btnPrevQ" type="button" onclick="navigateQ(-1)" class="bg-slate-700 hover:bg-slate-600 text-white px-4 py-2.5 rounded-xl text-xs font-bold transition flex items-center gap-2">
               <i class="fa-solid fa-arrow-left"></i> Sebelumnya
@@ -307,19 +295,15 @@
           </div>
         </div>
 
-        <!-- Right 1 Column: Question Number Palette Grid -->
         <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 flex flex-col justify-between space-y-4 shadow-xl">
           <div>
             <h3 class="font-bold text-white text-sm border-b border-slate-700 pb-2 mb-3 flex items-center gap-2">
               <i class="fa-solid fa-grip text-emerald-400"></i> Navigasi Soal
             </h3>
             
-            <div class="grid grid-cols-5 gap-2" id="qPaletteGrid">
-              <!-- Dynamic palette buttons -->
-            </div>
+            <div class="grid grid-cols-5 gap-2" id="qPaletteGrid"></div>
           </div>
 
-          <!-- Palette Legend & Finish Test Button -->
           <div class="space-y-4 border-t border-slate-700/80 pt-4">
             <div class="grid grid-cols-2 gap-2 text-[11px] text-slate-400">
               <div class="flex items-center gap-1.5"><span class="w-3 h-3 bg-emerald-600 rounded"></span> Terjawab</div>
@@ -336,17 +320,19 @@
       </div>
     </section>
 
-    <!-- VIEW 4: GURU DASHBOARD -->
+    <!-- GURU DASHBOARD (KHUSUS 1 GURU = 1 MAPEL) -->
     <section id="guruDashboardView" class="hidden space-y-6">
-      <!-- Guru Header Info -->
-      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div class="bg-slate-800 border border-slate-700 p-6 rounded-2xl flex flex-col md:flex-row md:items-center justify-between gap-4 shadow-xl">
         <div>
-          <div class="flex items-center gap-2">
-            <span class="bg-teal-500/20 text-teal-400 text-xs px-2.5 py-1 rounded-full border border-teal-500/30 font-semibold" id="guruSubjectBadge">Matematika</span>
-            <span class="text-xs text-slate-400 font-mono">NIP: <span id="guruNipDisplay">19850001</span></span>
+          <div class="flex flex-wrap items-center gap-2">
+            <span class="bg-teal-500/20 text-teal-300 text-xs px-3 py-1 rounded-full border border-teal-500/40 font-bold flex items-center gap-1.5">
+              <i class="fa-solid fa-book-open"></i> Pengampu Mapel: <span id="guruSubjectBadge">Informatika</span>
+            </span>
+            <span class="text-xs text-slate-400 font-mono bg-slate-900/80 px-2.5 py-1 rounded-lg border border-slate-700">NIP: <span id="guruNipDisplay">19850001</span></span>
+            <span class="text-[10px] bg-indigo-500/20 text-indigo-300 border border-indigo-500/30 px-2.5 py-1 rounded-full font-semibold">1 Guru = 1 Mata Pelajaran</span>
           </div>
-          <h2 class="text-2xl font-bold text-white mt-1" id="guruNameDisplay">Budi Santoso, S.Pd</h2>
-          <p class="text-slate-400 text-xs mt-0.5">Kelola Bank Soal Semua Guru, Import File/Link Doc, Atur Timer, Hasil Excel/PDF, dan Monitoring Kecurangan.</p>
+          <h2 class="text-2xl font-bold text-white mt-2" id="guruNameDisplay">Budi Santoso, S.Pd</h2>
+          <p class="text-slate-400 text-xs mt-0.5">Dasbor terisolasi khusus kelola Bank Soal, Timer, dan Hasil Siswa Mata Pelajaran <strong id="guruSubjectNoticeSub" class="text-teal-400">Informatika</strong>.</p>
         </div>
 
         <div class="flex flex-wrap gap-2">
@@ -357,28 +343,28 @@
             <i class="fa-solid fa-plus"></i> Buat Soal Manual
           </button>
           <button type="button" onclick="openTimerConfigModal()" class="bg-amber-600 hover:bg-amber-500 text-slate-950 px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow-lg">
-            <i class="fa-solid fa-clock"></i> Atur Timer
+            <i class="fa-solid fa-clock"></i> Atur Timer Ujian
           </button>
         </div>
       </div>
 
-      <!-- Guru Nav Tabs -->
       <div class="flex border-b border-slate-700 gap-4 text-xs sm:text-sm font-bold overflow-x-auto">
         <button id="tabGuruSoal" type="button" onclick="switchGuruTab('soal')" class="py-2.5 border-b-2 border-emerald-500 text-emerald-400 whitespace-nowrap">
-          <i class="fa-solid fa-layer-group mr-1"></i> Soal Semua Guru (<span id="countGuruSoal">5</span>)
+          <i class="fa-solid fa-layer-group mr-1"></i> Bank Soal Saya (<span id="countGuruSoal">0</span>)
         </button>
         <button id="tabGuruProctor" type="button" onclick="switchGuruTab('proctor')" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
           <i class="fa-solid fa-eye text-red-400 mr-1"></i> Monitoring Melanggar Aturan
         </button>
         <button id="tabGuruHasil" type="button" onclick="switchGuruTab('hasil')" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
-          <i class="fa-solid fa-square-poll-vertical text-teal-400 mr-1"></i> Hasil Jawaban Murid
+          <i class="fa-solid fa-square-poll-vertical text-teal-400 mr-1"></i> Hasil Jawaban Murid (Mapel Saya)
         </button>
       </div>
 
-      <!-- TAB 1: BANK SOAL SEMUA GURU -->
       <div id="guruTabSoalContent" class="space-y-4">
-        <div class="bg-slate-800 border border-slate-700 p-3.5 rounded-xl flex items-center justify-between gap-3 text-xs">
-          <span class="text-slate-300">Menampilkan bank soal yang dibuat oleh <strong>Semua Guru (80 Mapel)</strong>:</span>
+        <div class="bg-slate-800 border border-slate-700 p-3.5 rounded-xl flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div class="text-slate-300">
+            <i class="fa-solid fa-filter text-emerald-400 mr-1"></i> Menampilkan Bank Soal Khusus Mapel <strong id="guruSubjectNoticeFilter" class="text-emerald-400">Informatika</strong>:
+          </div>
           <select id="guruFilterPaket" onchange="renderGuruQuestions()" class="bg-slate-900 border border-slate-700 text-xs px-3 py-1.5 rounded-lg text-slate-200 font-semibold">
             <option value="ALL">Semua Paket (Paket A, B, C)</option>
             <option value="Paket A">Paket A</option>
@@ -387,35 +373,29 @@
           </select>
         </div>
 
-        <div id="guruQuestionList" class="space-y-3">
-          <!-- Dynamically populated questions -->
-        </div>
+        <div id="guruQuestionList" class="space-y-3"></div>
       </div>
 
-      <!-- TAB 2: LIVE PROCTORING MONITORING -->
       <div id="guruTabProctorContent" class="hidden space-y-4">
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl flex flex-wrap items-center justify-between gap-3">
           <div class="text-xs text-slate-300">
-            <span class="font-bold text-white">Status Realtime Ujian:</span> Total 1,200 Siswa Terdaftar.
+            <span class="font-bold text-white">Status Realtime Ujian Mapel <span id="proctorSubjectLabel" class="text-teal-400">Informatika</span>:</span> Total <span id="guruTotalStudentsCount">1,200</span> Siswa Terdaftar.
           </div>
           <div class="flex gap-4 text-xs font-semibold">
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-emerald-500 text-[10px]"></i> Mengerjakan (Normal)</span>
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-amber-500 text-[10px]"></i> Peringatan Tab/Split</span>
-            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-red-500 text-[10px]"></i> Terkunci (Curang)</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-emerald-500 text-[10px]"></i> Normal</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-amber-500 text-[10px]"></i> Peringatan</span>
+            <span class="flex items-center gap-1.5"><i class="fa-solid fa-circle text-red-500 text-[10px]"></i> Terkunci</span>
           </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="proctorStudentGrid">
-          <!-- Dynamic Student Proctor Cards -->
-        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4" id="proctorStudentGrid"></div>
       </div>
 
-      <!-- TAB 3: HASIL JAWABAN MURID & EXPORT -->
       <div id="guruTabHasilContent" class="hidden space-y-4">
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-2xl flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h3 class="font-bold text-white text-base">Hasil & Nilai Jawaban Murid</h3>
-            <p class="text-xs text-slate-400">Unduh rekapitulasi nilai dan jawaban murid dalam format Excel (.xlsx) atau PDF.</p>
+            <h3 class="font-bold text-white text-base">Hasil & Nilai Murid (<span id="hasilSubjectLabel" class="text-teal-400">Informatika</span>)</h3>
+            <p class="text-xs text-slate-400">Daftar nilai pengerjaan siswa khusus mata pelajaran Anda.</p>
           </div>
           <div class="flex gap-2">
             <button type="button" onclick="exportResultsExcel()" class="bg-emerald-600 hover:bg-emerald-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2">
@@ -440,44 +420,41 @@
                 <th class="p-3">Status Fraud</th>
               </tr>
             </thead>
-            <tbody id="guruStudentResultsTable" class="divide-y divide-slate-700/50">
-              <!-- Dynamic Results -->
-            </tbody>
+            <tbody id="guruStudentResultsTable" class="divide-y divide-slate-700/50"></tbody>
           </table>
         </div>
       </div>
     </section>
 
-    <!-- VIEW 5: ADMIN DASHBOARD -->
+    <!-- ADMIN DASHBOARD -->
     <section id="adminDashboardView" class="hidden space-y-6">
       <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-slate-800 border border-slate-700 p-6 rounded-2xl">
         <div>
           <h2 class="text-2xl font-bold text-white flex items-center gap-2">
             <i class="fa-solid fa-user-shield text-amber-400"></i> Panel Administrator Utama
           </h2>
-          <p class="text-slate-400 text-sm mt-1">Mengelola 1 Admin, 80 Guru = 80 Mapel = 3 Paket (A,B,C), dan 1,200 NIS Murid.</p>
+          <p class="text-slate-400 text-sm mt-1">Mengelola 80 Guru = 80 Mata Pelajaran (1 Guru = 1 Mapel) & Synced Google Sheets.</p>
         </div>
         <div class="flex gap-2">
           <button type="button" onclick="openExcelImportModal()" class="bg-teal-600 hover:bg-teal-500 text-slate-950 px-4 py-2 rounded-xl text-xs font-bold transition flex items-center gap-2 shadow">
             <i class="fa-solid fa-file-circle-plus"></i> Import Excel Guru & Mapel
           </button>
           <button type="button" onclick="resetAllDeviceLocks()" class="bg-amber-600/20 hover:bg-amber-600/30 text-amber-400 border border-amber-500/40 px-4 py-2 rounded-xl text-xs font-semibold transition flex items-center gap-2">
-            <i class="fa-solid fa-rotate-left"></i> Reset Kunci Kunci
+            <i class="fa-solid fa-rotate-left"></i> Reset Kunci Perangkat
           </button>
         </div>
       </div>
 
-      <!-- Admin Stats Grid -->
       <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl">
           <div class="text-xs text-slate-400 font-semibold uppercase">Guru & Mapel Master</div>
           <div class="text-2xl font-black text-emerald-400 mt-1" id="adminCountGuru">80 Guru</div>
-          <div class="text-[11px] text-slate-500 mt-1">1 Guru = 1 Mapel = 3 Paket</div>
+          <div class="text-[11px] text-slate-500 mt-1">Restriksi 1 Guru = 1 Mapel</div>
         </div>
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl">
           <div class="text-xs text-slate-400 font-semibold uppercase">Total Siswa Terdaftar</div>
-          <div class="text-2xl font-black text-teal-400 mt-1">1,200 Siswa</div>
-          <div class="text-[11px] text-slate-500 mt-1">Sistem NIS Aktif</div>
+          <div class="text-2xl font-black text-teal-400 mt-1" id="adminCountStudent">1,200 Siswa</div>
+          <div class="text-[11px] text-slate-500 mt-1">Sistem NIS Google Sheets</div>
         </div>
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl">
           <div class="text-xs text-slate-400 font-semibold uppercase">Total Paket Soal</div>
@@ -486,40 +463,33 @@
         </div>
         <div class="bg-slate-800 border border-slate-700 p-4 rounded-xl">
           <div class="text-xs text-slate-400 font-semibold uppercase">Pelanggaran Terdeteksi</div>
-          <div class="text-2xl font-black text-red-400 mt-1" id="adminViolationCount">2 Deteksi</div>
+          <div class="text-2xl font-black text-red-400 mt-1" id="adminViolationCount">0 Deteksi</div>
           <div class="text-[11px] text-red-400/80 mt-1">Sistem Otomatis Kunci</div>
         </div>
       </div>
 
-      <!-- Admin Nav Tabs -->
       <div class="flex border-b border-slate-700 gap-4 text-xs sm:text-sm font-bold overflow-x-auto">
         <button id="tabAdminSoal" type="button" onclick="switchAdminTab('soal')" class="py-2.5 border-b-2 border-emerald-500 text-emerald-400 whitespace-nowrap">
-          <i class="fa-solid fa-folder-open mr-1"></i> Soal Dibuat Semua Guru
+          <i class="fa-solid fa-folder-open mr-1"></i> Bank Soal Semua Mapel
         </button>
         <button id="tabAdminUser" type="button" onclick="switchAdminTab('user')" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
-          <i class="fa-solid fa-address-book mr-1"></i> Data Murid & Guru (1 Guru = 1 Mapel = 3 Paket)
+          <i class="fa-solid fa-address-book mr-1"></i> Data Master Guru & Mapel (1 Guru = 1 Mapel)
         </button>
         <button id="tabAdminLaporan" type="button" onclick="switchAdminTab('laporan')" class="py-2.5 border-b-2 border-transparent text-slate-400 hover:text-slate-200 whitespace-nowrap">
           <i class="fa-solid fa-circle-check text-emerald-400 mr-1"></i> Laporan Selesai Ujian
         </button>
       </div>
 
-      <!-- ADMIN TAB 1: SOAL SEMUA GURU -->
       <div id="adminTabSoalContent" class="space-y-4">
-        <div id="adminQuestionList" class="space-y-3">
-          <!-- Dynamic List of All Questions -->
-        </div>
+        <div id="adminQuestionList" class="space-y-3"></div>
       </div>
 
-      <!-- ADMIN TAB 2: INPUT & MASTER DATA GURU MURID -->
       <div id="adminTabUserContent" class="hidden space-y-6">
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          
-          <!-- Guru & Mapel Data Table -->
           <div class="lg:col-span-2 bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
             <div class="flex items-center justify-between">
               <h3 class="font-bold text-white text-sm flex items-center gap-2">
-                <i class="fa-solid fa-chalkboard-user text-emerald-400"></i> Master 80 Guru & Mapel (3 Paket A, B, C)
+                <i class="fa-solid fa-chalkboard-user text-emerald-400"></i> Master Data Guru & Mapel (Restriksi 1 Guru = 1 Mapel)
               </h3>
             </div>
             <div class="overflow-x-auto max-h-80 overflow-y-auto">
@@ -529,21 +499,18 @@
                     <th class="p-2.5">No</th>
                     <th class="p-2.5">NIP</th>
                     <th class="p-2.5">Nama Guru</th>
-                    <th class="p-2.5">Mata Pelajaran</th>
+                    <th class="p-2.5">Mata Pelajaran (Terkunci)</th>
                     <th class="p-2.5">Paket Soal</th>
                   </tr>
                 </thead>
-                <tbody id="adminTeacherTable" class="divide-y divide-slate-700/50">
-                  <!-- Dynamic Teachers -->
-                </tbody>
+                <tbody id="adminTeacherTable" class="divide-y divide-slate-700/50"></tbody>
               </table>
             </div>
           </div>
 
-          <!-- Quick Add Manual Guru Form -->
           <div class="bg-slate-800 border border-slate-700 rounded-2xl p-5 space-y-4">
             <h3 class="font-bold text-white text-sm flex items-center gap-2">
-              <i class="fa-solid fa-user-plus text-teal-400"></i> Tambah Guru & Mapel Manual
+              <i class="fa-solid fa-user-plus text-teal-400"></i> Tambah Guru & Mapel Baru
             </h3>
 
             <form onsubmit="handleAdminAddTeacher(event)" class="space-y-3 text-xs">
@@ -556,12 +523,12 @@
                 <input type="text" id="addGuruName" required placeholder="Contoh: Drs. Herman, M.Pd" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
               </div>
               <div>
-                <label class="block font-semibold text-slate-300 mb-1">Nama Mata Pelajaran</label>
-                <input type="text" id="addGuruSubject" required placeholder="Contoh: Fisika Lanjutan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
+                <label class="block font-semibold text-slate-300 mb-1">Mata Pelajaran Diampu (1 Guru = 1 Mapel)</label>
+                <input type="text" id="addGuruSubject" required placeholder="Contoh: Fisika Lanjutan" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold text-teal-300">
               </div>
 
               <div class="p-2.5 bg-slate-900/80 border border-slate-700 rounded-xl text-[11px] text-slate-400">
-                <i class="fa-solid fa-circle-info text-amber-400"></i> Otomatis membuat 3 Paket Soal (Paket A, Paket B, Paket C) untuk guru ini.
+                <i class="fa-solid fa-circle-info text-amber-400"></i> Menyimpan data ke tab <strong>Data_Guru</strong> di Google Sheets.
               </div>
 
               <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-2.5 rounded-xl transition">
@@ -572,7 +539,6 @@
         </div>
       </div>
 
-      <!-- ADMIN TAB 3: LAPORAN SELESAI UJIAN -->
       <div id="adminTabLaporanContent" class="hidden space-y-4">
         <div class="bg-slate-800 border border-slate-700 p-5 rounded-2xl space-y-4">
           <div class="flex items-center justify-between">
@@ -600,9 +566,7 @@
                   <th class="p-3">Skor / Nilai</th>
                 </tr>
               </thead>
-              <tbody id="adminLaporanTable" class="divide-y divide-slate-700/50">
-                <!-- Dynamic Laporan -->
-              </tbody>
+              <tbody id="adminLaporanTable" class="divide-y divide-slate-700/50"></tbody>
             </table>
           </div>
         </div>
@@ -611,23 +575,42 @@
 
   </main>
 
-  <!-- MODAL 1: IMPORT DOC LINK / FILE .DOC -->
+  <!-- DOC IMPORT MODAL -->
   <div id="docLinkModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
-    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
+    <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-file-word text-indigo-400"></i> Import Soal berupa Link .Doc / File .Docx
+          <i class="fa-solid fa-file-word text-indigo-400"></i> Import Soal Tag (.doc / Link Google Doc)
         </h3>
         <button type="button" onclick="closeDocLinkModal()" class="text-slate-400 hover:text-white">&times;</button>
       </div>
 
       <div class="space-y-4 text-xs">
+        <div class="p-3 bg-slate-900 rounded-xl border border-slate-700 space-y-1">
+          <div class="text-slate-300">Target Mata Pelajaran: <strong id="docTargetSubjectDisplay" class="text-teal-400">Informatika</strong></div>
+          <div class="text-[10px] text-slate-500">* Otomatis dikunci sesuai mata pelajaran akun Anda (1 Guru = 1 Mapel).</div>
+        </div>
+
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">Pilihan 1: Tempel Link Google Doc / Public Word Document Link</label>
-          <div class="flex gap-2">
-            <input type="url" id="docUrlInput" placeholder="https://docs.google.com/document/d/..." class="flex-1 bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
-            <button type="button" onclick="processDocUrlImport()" class="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-2 rounded-xl font-bold">Proses Link</button>
-          </div>
+          <label class="block font-semibold text-slate-300 mb-1">Target Paket Soal</label>
+          <select id="docImportPaketSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+            <option value="Paket A">Paket A</option>
+            <option value="Paket B">Paket B</option>
+            <option value="Paket C">Paket C</option>
+          </select>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1"><i class="fa-solid fa-link text-sky-400"></i> Sumber Link Google Doc / URL Naskah</label>
+          <input type="url" id="docLinkUrlInput" placeholder="https://docs.google.com/document/d/..." class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-sky-300 font-mono text-xs focus:outline-none focus:border-sky-500">
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Pilihan 1: Tempel / Paste Naskah Soal Tag (Banyak Soal)</label>
+          <textarea id="docTextInput" rows="5" placeholder="[SOAL] Dalam computational thinking...&#10;[A]. Abstraksi&#10;[B]. Dekomposisi&#10;[C]. Algoritma&#10;[D]. Debugging&#10;[E]. Enkripsi&#10;[KUNCI:B]" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white font-mono text-xs focus:outline-none focus:border-indigo-500"></textarea>
+          <button type="button" onclick="processDocTextImport()" class="w-full mt-2 bg-indigo-600 hover:bg-indigo-500 text-white py-2 rounded-xl font-bold transition">
+            <i class="fa-solid fa-file-import"></i> Import Naskah Soal ke Google Sheets
+          </button>
         </div>
 
         <div class="relative flex py-1 items-center">
@@ -637,38 +620,34 @@
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">Pilihan 2: Unggah File (.doc / .docx)</label>
+          <label class="block font-semibold text-slate-300 mb-1">Pilihan 2: Unggah File (.doc / .docx / .txt)</label>
           <label class="w-full bg-slate-900 hover:bg-slate-900/80 border-2 border-dashed border-slate-700 hover:border-emerald-500 p-4 rounded-xl text-center cursor-pointer transition block">
             <i class="fa-solid fa-cloud-arrow-up text-2xl text-emerald-400 mb-1"></i>
-            <div class="font-bold text-slate-200">Klik untuk Unggah File .doc / .docx</div>
-            <div class="text-[10px] text-slate-500 mt-1">Aplikasi otomatis mendeteksi format naskah soal</div>
+            <div class="font-bold text-slate-200">Klik untuk Unggah Berkas Soal (.docx / .doc / .txt)</div>
+            <div class="text-[10px] text-slate-500 mt-1">Membaca tag [SOAL], [A]..[E], dan [KUNCI:B]</div>
             <input type="file" accept=".doc,.docx,.txt" onchange="processDocFileImport(event)" class="hidden">
           </label>
-        </div>
-
-        <!-- Sample Format Tag Guide -->
-        <div class="bg-slate-900/90 border border-slate-700 p-3 rounded-xl font-mono text-[10px] text-emerald-300 space-y-1">
-          <div class="font-bold text-slate-300">[Contoh Tag Format File Doc]:</div>
-          <div>[SOAL] Berapakah hasil 10 + 20?</div>
-          <div>[A] 20 &bull; [B] 30 &bull; [C] 40 &bull; [D] 50 &bull; [E] 60</div>
-          <div>[KUNCI: B]</div>
         </div>
       </div>
     </div>
   </div>
 
-  <!-- MODAL 2: MANUAL QUESTION CREATOR WITH AUDIO & IMAGE SAMPLE -->
+  <!-- MANUAL QUESTION MODAL -->
   <div id="questionModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-2xl w-full p-6 space-y-4 shadow-2xl max-h-[90vh] overflow-y-auto">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-pen-to-square text-emerald-400"></i> Buat Soal Manual (Termasuk Gambar & Audio)
+          <i class="fa-solid fa-pen-to-square text-emerald-400"></i> Buat Soal Manual (5 Jenis Soal)
         </h3>
         <button type="button" onclick="closeQuestionModal()" class="text-slate-400 hover:text-white">&times;</button>
       </div>
 
       <form onsubmit="saveManualQuestion(event)" class="space-y-4 text-xs">
-        <div class="grid grid-cols-2 gap-3">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div>
+            <label class="block font-semibold text-slate-300 mb-1">Mata Pelajaran</label>
+            <input type="text" id="qSubjectLocked" readonly value="Informatika" class="w-full bg-slate-900/60 border border-slate-700 rounded-xl px-3 py-2 text-teal-300 font-bold cursor-not-allowed">
+          </div>
           <div>
             <label class="block font-semibold text-slate-300 mb-1">Pilih Paket Soal</label>
             <select id="qPaketSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold">
@@ -678,8 +657,8 @@
             </select>
           </div>
           <div>
-            <label class="block font-semibold text-slate-300 mb-1">Jenis Soal (5 Jenis)</label>
-            <select id="qTypeSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold">
+            <label class="block font-semibold text-slate-300 mb-1">Jenis Soal</label>
+            <select id="qTypeSelect" onchange="renderDynamicQuestionInputs()" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-semibold">
               <option value="PG">1. Pilihan Ganda A-E</option>
               <option value="PG_KOMPLEKS">2. Pilihan Ganda Kompleks</option>
               <option value="PENGURUTAN">3. Pengurutan (Sequence)</option>
@@ -694,33 +673,29 @@
           <textarea id="qTextPrompt" required rows="3" placeholder="Tuliskan teks pertanyaan..." class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-white focus:outline-none focus:border-emerald-500"></textarea>
         </div>
 
-        <!-- Attachment Inputs -->
+        <div id="dynamicAnswerFieldsContainer" class="space-y-3 bg-slate-900/80 p-4 rounded-xl border border-slate-700"></div>
+
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 bg-slate-900/60 p-3 rounded-xl border border-slate-700">
           <div>
             <label class="block font-semibold text-slate-300 mb-1"><i class="fa-solid fa-image text-sky-400"></i> Lampirkan Gambar (JPG, PNG)</label>
-            <input type="file" id="qImageFile" accept="image/*" class="w-full text-slate-400 text-[11px]">
-            <span class="text-[10px] text-slate-500 block mt-0.5">Atau biarkan kosong untuk contoh otomatis</span>
+            <input type="file" id="qImageFile" accept="image/*" onchange="handleQuestionImageUpload(event)" class="w-full text-slate-400 text-[11px]">
+            <input type="hidden" id="qImageUrlHidden" value="">
           </div>
           <div>
             <label class="block font-semibold text-slate-300 mb-1"><i class="fa-solid fa-file-audio text-amber-400"></i> Lampirkan Audio (MP3)</label>
-            <input type="file" id="qAudioFile" accept="audio/*" class="w-full text-slate-400 text-[11px]">
-            <span class="text-[10px] text-slate-500 block mt-0.5">Aplikasi juga mendukung Synth Listening</span>
+            <input type="file" id="qAudioFile" accept="audio/*" onchange="handleQuestionAudioUpload(event)" class="w-full text-slate-400 text-[11px]">
+            <input type="hidden" id="qAudioUrlHidden" value="">
           </div>
         </div>
 
-        <div>
-          <label class="block font-semibold text-slate-300 mb-1">Kunci Jawaban</label>
-          <input type="text" id="qKeyInput" required placeholder="Contoh: B (Untuk PG) / A,C (Untuk Kompleks)" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white">
-        </div>
-
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl transition text-sm">
-          <i class="fa-solid fa-save"></i> Simpan Soal Ke Bank Soal
+          <i class="fa-solid fa-save"></i> Simpan Soal Mapel Ke Google Sheets
         </button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 3: EXCEL IMPORT FOR ADMIN (1 GURU = 1 MAPEL) -->
+  <!-- EXCEL IMPORT MODAL -->
   <div id="excelImportModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-xl w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
@@ -732,7 +707,7 @@
 
       <div class="space-y-4 text-xs">
         <p class="text-slate-300">
-          Admin dapat menambahkan daftar guru dan mata pelajaran secara massal menggunakan file Excel (.xlsx / .csv).
+          Admin dapat menambahkan daftar guru dan mata pelajaran secara massal (1 Guru = 1 Mapel) menggunakan file Excel (.xlsx / .csv).
         </p>
 
         <label class="w-full bg-slate-900 border-2 border-dashed border-slate-700 hover:border-emerald-500 p-6 rounded-xl text-center cursor-pointer transition block">
@@ -749,36 +724,50 @@
     </div>
   </div>
 
-  <!-- MODAL 4: TIMER CONFIGURATION FOR GURU -->
+  <!-- TIMER CONFIG MODAL -->
   <div id="timerModal" class="hidden fixed inset-0 z-50 bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-4 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
         <h3 class="text-lg font-bold text-white flex items-center gap-2">
-          <i class="fa-solid fa-clock text-amber-400"></i> Pengaturan Timer Ujian
+          <i class="fa-solid fa-clock text-amber-400"></i> Pengaturan Timer Ujian Mapel
         </h3>
         <button type="button" onclick="closeTimerConfigModal()" class="text-slate-400 hover:text-white">&times;</button>
       </div>
 
       <form onsubmit="saveTimerConfig(event)" class="space-y-4 text-xs">
+        <div class="p-3 bg-slate-900 rounded-xl border border-slate-700">
+          <div class="text-slate-300">Ujian untuk Mata Pelajaran: <strong id="timerSubjectDisplay" class="text-teal-400">Informatika</strong></div>
+          <div class="text-[10px] text-slate-500 mt-0.5">* Token hanya berlaku untuk siswa yang mengikuti ujian mapel ini.</div>
+        </div>
+
+        <div>
+          <label class="block font-semibold text-slate-300 mb-1">Pilih Paket Ujian</label>
+          <select id="timerPaketSelect" class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-bold">
+            <option value="Paket A">Paket A</option>
+            <option value="Paket B">Paket B</option>
+            <option value="Paket C">Paket C</option>
+          </select>
+        </div>
+
         <div>
           <label class="block font-semibold text-slate-300 mb-1">Durasi Ujian (Dalam Menit)</label>
           <input type="number" id="timerMinutesInput" min="5" max="300" value="90" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-white font-mono text-base">
         </div>
 
         <div>
-          <label class="block font-semibold text-slate-300 mb-1">Token Keamanan Soal Saat Ini</label>
-          <input type="text" id="tokenConfigInput" value="MATH-A" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold text-base uppercase">
-          <span class="text-[10px] text-slate-500 mt-1 block">Berikan token ini kepada murid sebelum ujian dimulai.</span>
+          <label class="block font-semibold text-slate-300 mb-1">Token Keamanan Soal</label>
+          <input type="text" id="tokenConfigInput" value="INFO-A" required class="w-full bg-slate-900 border border-slate-700 rounded-xl px-3 py-2 text-emerald-400 font-mono font-bold text-base uppercase">
+          <span class="text-[10px] text-slate-500 mt-1 block">Berikan token ini kepada siswa sebelum ujian dimulai.</span>
         </div>
 
         <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-slate-950 font-bold py-3 rounded-xl transition">
-          <i class="fa-solid fa-check"></i> Simpan Pengaturan
+          <i class="fa-solid fa-check"></i> Terbitkan Ujian Mapel Ke Siswa
         </button>
       </form>
     </div>
   </div>
 
-  <!-- MODAL 5: KONFIRMASI SELESAIKAN UJIAN MURID -->
+  <!-- FINISH EXAM CONFIRMATION MODAL -->
   <div id="finishExamModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl">
       <div class="flex items-center justify-between border-b border-slate-700 pb-3">
@@ -792,7 +781,6 @@
         Apakah Anda yakin ingin mengakhiri ujian ini? Periksa kembali rekapitulasi pengerjaan Anda di bawah ini sebelum submit:
       </p>
 
-      <!-- Question Status Summary Cards -->
       <div class="grid grid-cols-3 gap-2 text-center font-mono">
         <div class="bg-slate-900 border border-slate-700 p-2.5 rounded-xl">
           <div class="text-[10px] text-slate-400 uppercase font-sans font-semibold">Terjawab</div>
@@ -810,7 +798,7 @@
 
       <div id="finishExamWarningAlert" class="hidden bg-amber-950/60 border border-amber-600/60 p-3 rounded-xl text-xs text-amber-300 flex items-start gap-2.5">
         <i class="fa-solid fa-triangle-exclamation text-base mt-0.5 text-amber-400"></i>
-        <div class="leading-relaxed">Masih ada soal yang <strong class="underline font-bold">ragu-ragu</strong> atau <strong class="underline font-bold">belum diisi</strong>! Disarankan untuk memeriksa kembali sebelum mengakhiri.</div>
+        <div class="leading-relaxed">Masih ada soal yang <strong class="underline font-bold">ragu-ragu</strong> atau <strong class="underline font-bold">belum diisi</strong>! Disarankan untuk memeriksa kembali.</div>
       </div>
 
       <div class="pt-2 flex flex-col sm:flex-row gap-2">
@@ -824,7 +812,7 @@
     </div>
   </div>
 
-  <!-- MODAL 6: LOGOUT CONFIRMATION -->
+  <!-- LOGOUT MODAL -->
   <div id="logoutModal" class="hidden fixed inset-0 z-[9999] bg-slate-950/80 backdrop-blur flex items-center justify-center p-4">
     <div class="bg-slate-800 border border-slate-700 rounded-2xl max-w-sm w-full p-5 space-y-4 shadow-2xl text-center">
       <div class="w-12 h-12 bg-red-600/20 text-red-400 rounded-full flex items-center justify-center mx-auto text-xl">
@@ -840,54 +828,63 @@
   </div>
 
   <script>
-    // --- APP GLOBAL STATE & MASTER DATA ---
     let currentUser = null;
     let currentRole = 'murid';
     
-    // Security lockdown trackers
     let cheatViolations = 0;
     const MAX_CHEAT_TOLERANCE = 2;
     let isLockedOut = false;
     let isTestActive = false;
     let deviceSessionId = "DEV-" + Math.floor(100000 + Math.random() * 900000);
 
-    // Dynamic Database Stores
     let teachersDatabase = [];
     let studentsDatabase = [];
     let activeExamPackages = [];
     let completedLaporanDatabase = [];
 
-    // Master Questions Database with 5 Types, Audio, and Image Attachments
+    // Pre-loaded sample questions tagged per teacher & subject
     let questionsDatabase = [
       {
         id: 1,
         paket: 'Paket A',
         type: 'PG',
-        question: 'Berapakah hasil dari kalkulasi aljabar dasar: 15 × 12 + 45 ?',
-        options: ['215', '225', '235', '245', '255'],
+        question: 'Dalam computational thinking, kegiatan memecah masalah besar menjadi beberapa bagian kecil disebut ....',
+        options: ['Abstraksi', 'Dekomposisi', 'Algoritma', 'Debugging', 'Enkripsi'],
         key: 'B',
         guruName: 'Budi Santoso, S.Pd',
-        subject: 'Matematika',
+        subject: 'Informatika',
         image: null,
         audio: null
       },
       {
         id: 2,
         paket: 'Paket A',
+        type: 'PG',
+        question: 'Seorang siswa membuat program, kemudian menemukan bahwa hasil program tidak sesuai yang diharapkan. Kegiatan memperbaiki kesalahan tersebut disebut ....',
+        options: ['Browsing', 'Debugging', 'Formatting', 'Downloading', 'Uploading'],
+        key: 'B',
+        guruName: 'Budi Santoso, S.Pd',
+        subject: 'Informatika',
+        image: null,
+        audio: null
+      },
+      {
+        id: 3,
+        paket: 'Paket A',
         type: 'PG_KOMPLEKS',
-        question: 'Pilihlah semua bilangan di bawah ini yang tergolong sebagai **Bilangan Prima**! (Pilih lebih dari satu)',
+        question: 'Pilihlah semua bilangan di bawah ini yang tergolong sebagai **Bilangan Prima**!',
         options: ['Angka 2', 'Angka 9', 'Angka 13', 'Angka 15', 'Angka 17'],
         key: ['A', 'C', 'E'],
-        guruName: 'Budi Santoso, S.Pd',
+        guruName: 'Drs. Ahmad, M.Pd',
         subject: 'Matematika',
         image: 'https://placehold.co/600x200/1e293b/22c55e?text=Diagram+Bilangan+Prima',
         audio: null
       },
       {
-        id: 3,
+        id: 4,
         paket: 'Paket B',
         type: 'PENGURUTAN',
-        question: 'Urutkan tahapan metode ilmiah Fisika berikut ini dari langkah awal hingga akhir secara runtut!',
+        question: 'Urutkan tahapan metode ilmiah Fisika berikut dari langkah awal hingga akhir!',
         items: [
           'Merumuskan Hipotesis',
           'Mengidentifikasi Masalah',
@@ -901,23 +898,23 @@
         audio: null
       },
       {
-        id: 4,
+        id: 5,
         paket: 'Paket A',
         type: 'PENJODOHAN',
-        question: 'Jodohkan istilah bangun datar pada kolom kiri dengan rumus luas yang tepat pada kolom kanan!',
+        question: 'Jodohkan bangun datar pada kolom kiri dengan rumus luas yang tepat!',
         leftItems: ['Luas Lingkaran', 'Keliling Lingkaran', 'Luas Segitiga'],
         rightOptions: ['π × r²', '2 × π × r', '½ × alas × tinggi'],
         key: { 0: 0, 1: 1, 2: 2 },
-        guruName: 'Budi Santoso, S.Pd',
+        guruName: 'Drs. Ahmad, M.Pd',
         subject: 'Matematika',
         image: null,
-        audio: 'synth'
+        audio: null
       },
       {
-        id: 5,
+        id: 6,
         paket: 'Paket C',
         type: 'ESSAY',
-        question: 'Jelaskan secara singkat mengenai Hukum Kekekalan Energi dan berikan 2 contoh konkret penerapannya!',
+        question: 'Jelaskan secara singkat mengenai Hukum Kekekalan Energi dan berikan 2 contoh penerapannya!',
         keyRubric: 'Definisi (50%) + 2 Contoh Nyata (50%)',
         guruName: 'Siti Rahma, M.Si',
         subject: 'Fisika',
@@ -926,37 +923,69 @@
       }
     ];
 
-    // Student Answers & Exam Engine Variables
     let studentAnswers = {};
     let activeQIndex = 0;
     let timerInterval = null;
-    let totalExamSeconds = 5400; // Default 90 Mins
+    let totalExamSeconds = 5400;
     let activeSelectedPaket = 'Paket A';
+
+    function showToastAlert(message, type = 'info') {
+      const container = document.getElementById('toastContainer');
+      if (!container) return;
+      
+      const toast = document.createElement('div');
+      toast.className = `p-3.5 rounded-xl shadow-2xl border text-xs font-semibold flex items-center gap-2.5 transition-all transform translate-y-2 opacity-0 pointer-events-auto bg-slate-800 text-slate-100 border-slate-700`;
+      
+      if (type === 'success') {
+        toast.classList.add('border-emerald-500/50', 'bg-emerald-950/80', 'text-emerald-300');
+        toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400 text-base"></i> <span>${message}</span>`;
+      } else if (type === 'warning') {
+        toast.classList.add('border-amber-500/50', 'bg-amber-950/80', 'text-amber-300');
+        toast.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-amber-400 text-base"></i> <span>${message}</span>`;
+      } else {
+        toast.innerHTML = `<i class="fa-solid fa-circle-info text-sky-400 text-base"></i> <span>${message}</span>`;
+      }
+
+      container.appendChild(toast);
+      
+      requestAnimationFrame(() => {
+        toast.classList.remove('translate-y-2', 'opacity-0');
+      });
+
+      setTimeout(() => {
+        toast.classList.add('opacity-0', 'translate-y-2');
+        setTimeout(() => toast.remove(), 300);
+      }, 3500);
+    }
 
     function initMasterData() {
       const subjectList = [
-        "Matematika", "Bahasa Indonesia", "Bahasa Inggris", "Fisika", "Kimia", "Biologi",
+        "Informatika", "Fisika", "Matematika", "Bahasa Indonesia", "Bahasa Inggris", "Kimia", "Biologi",
         "Sejarah Indonesia", "Geografi", "Sosiologi", "Ekonomi", "PPKn", "Seni Budaya",
-        "Pendidikan Agama", "PJOK", "Informatika", "Kewirausahaan"
+        "Pendidikan Agama", "PJOK", "Kewirausahaan"
+      ];
+
+      const customGuruNames = [
+        "Budi Santoso, S.Pd", "Siti Rahma, M.Si", "Drs. Ahmad, M.Pd", "Endang Tri, S.Kom",
+        "Rahmat Hidayat, S.Si", "Dewi Lestari, M.Pd", "Bambang Wijaya, S.T", "Nurhasanah, M.Sc"
       ];
       
       teachersDatabase = [];
-      // Generate 80 Teachers (1 Teacher = 1 Subject = 3 Paket Soal A, B, C)
       for (let i = 1; i <= 80; i++) {
-        const subjName = subjectList[(i - 1) % subjectList.length] + " Kelas " + (10 + (i % 3));
+        const subjName = subjectList[(i - 1) % subjectList.length];
+        const gName = i <= customGuruNames.length ? customGuruNames[i - 1] : ("Guru " + subjName + " " + i + ", S.Pd");
         teachersDatabase.push({
           nip: "1985" + String(i).padStart(4, '0'),
-          name: "Guru " + subjName + " S.Pd",
+          name: gName,
           subject: subjName,
           pakets: ['Paket A', 'Paket B', 'Paket C']
         });
       }
 
       studentsDatabase = [];
-      // Generate 1200 Students with NIS (1001 to 2200)
       for (let i = 1001; i <= 2200; i++) {
         studentsDatabase.push({
-          id: String(i), // NIS
+          id: String(i),
           name: "Siswa NIS " + i,
           class: "XII IPA " + ((i % 5) + 1),
           status: i === 1001 ? "Normal" : (i % 23 === 0 ? "Curang (Terkunci)" : "Normal"),
@@ -968,7 +997,7 @@
             nis: String(i),
             name: "Siswa NIS " + i,
             class: "XII IPA " + ((i % 5) + 1),
-            subject: "Matematika",
+            subject: (i % 2 === 0) ? "Informatika" : "Fisika",
             finishTime: "10:15 WIB",
             status: "Jujur (Tanpa Pelanggaran)",
             score: Math.floor(75 + Math.random() * 25)
@@ -977,9 +1006,9 @@
       }
 
       activeExamPackages = [
-        { id: 'ex1', subject: 'Matematika', teacher: 'Budi Santoso, S.Pd', paket: 'Paket A', token: 'MATH-A', durationMinutes: 90 },
+        { id: 'ex1', subject: 'Informatika', teacher: 'Budi Santoso, S.Pd', paket: 'Paket A', token: 'INFO-A', durationMinutes: 90 },
         { id: 'ex2', subject: 'Fisika', teacher: 'Siti Rahma, M.Si', paket: 'Paket B', token: 'PHYS-B', durationMinutes: 60 },
-        { id: 'ex3', subject: 'Bahasa Indonesia', teacher: 'Dra. Endang, M.Pd', paket: 'Paket C', token: 'INDO-C', durationMinutes: 90 }
+        { id: 'ex3', subject: 'Matematika', teacher: 'Drs. Ahmad, M.Pd', paket: 'Paket A', token: 'MATH-A', durationMinutes: 90 }
       ];
 
       renderAdminTeacherTable();
@@ -996,19 +1025,29 @@
 
       const label = document.getElementById('identityLabel');
       if (role === 'murid') label.innerText = 'Nomor Induk Siswa (NIS)';
-      else if (role === 'guru') label.innerText = 'NIP Guru';
+      else if (role === 'guru') label.innerText = 'NIP Guru (1 Guru = 1 Mapel)';
       else label.innerText = 'ID Admin Utama';
     }
 
-    function quickFill(role) {
-      setLoginRole(role);
-      if (role === 'murid') {
+    function quickFill(type) {
+      if (type === 'murid') {
+        setLoginRole('murid');
         document.getElementById('loginId').value = '1001';
         document.getElementById('loginPass').value = '1001';
-      } else if (role === 'guru') {
+      } else if (type === 'guru1') {
+        setLoginRole('guru');
         document.getElementById('loginId').value = '19850001';
         document.getElementById('loginPass').value = '19850001';
+      } else if (type === 'guru2') {
+        setLoginRole('guru');
+        document.getElementById('loginId').value = '19850002';
+        document.getElementById('loginPass').value = '19850002';
+      } else if (type === 'guru3') {
+        setLoginRole('guru');
+        document.getElementById('loginId').value = '19850003';
+        document.getElementById('loginPass').value = '19850003';
       } else {
+        setLoginRole('admin');
         document.getElementById('loginId').value = 'admin';
         document.getElementById('loginPass').value = 'admin';
       }
@@ -1022,16 +1061,15 @@
         currentUser = { id: 'admin', name: 'Administrator Utama', role: 'admin' };
       } else if (currentRole === 'guru') {
         const guruObj = teachersDatabase.find(g => g.nip === idInput) || teachersDatabase[0];
+        // Enforce 1 Guru = 1 Subject
         currentUser = { id: guruObj.nip, name: guruObj.name, role: 'guru', subject: guruObj.subject };
       } else {
         const studentObj = studentsDatabase.find(s => s.id === idInput) || studentsDatabase[0];
         currentUser = { id: studentObj.id, name: studentObj.name, role: 'murid', class: studentObj.class };
       }
 
-      localStorage.setItem('cbt_active_device_user', currentUser.id);
-
       document.getElementById('navUserName').innerText = currentUser.name;
-      document.getElementById('navUserRole').innerText = currentUser.role.toUpperCase();
+      document.getElementById('navUserRole').innerText = currentUser.role === 'guru' ? `GURU (${currentUser.subject})` : currentUser.role.toUpperCase();
       document.getElementById('logoutBtn').classList.remove('hidden');
       document.getElementById('logoutBtn').classList.add('flex');
 
@@ -1045,7 +1083,16 @@
         document.getElementById('guruNameDisplay').innerText = currentUser.name;
         document.getElementById('guruNipDisplay').innerText = currentUser.id;
         document.getElementById('guruSubjectBadge').innerText = currentUser.subject;
+        document.getElementById('guruSubjectNoticeSub').innerText = currentUser.subject;
+        document.getElementById('guruSubjectNoticeFilter').innerText = currentUser.subject;
+        document.getElementById('qSubjectLocked').value = currentUser.subject;
+        document.getElementById('docTargetSubjectDisplay').innerText = currentUser.subject;
+        document.getElementById('timerSubjectDisplay').innerText = currentUser.subject;
+        document.getElementById('proctorSubjectLabel').innerText = currentUser.subject;
+        document.getElementById('hasilSubjectLabel').innerText = currentUser.subject;
+
         renderGuruQuestions();
+        renderStudentResultsTable();
       } else if (currentUser.role === 'murid') {
         document.getElementById('muridDashboardView').classList.remove('hidden');
         document.getElementById('muridNameDisplay').innerText = currentUser.name;
@@ -1072,7 +1119,6 @@
     function executeLogout() {
       closeLogoutModal();
       stopLockdownEngine();
-      localStorage.removeItem('cbt_active_device_user');
       location.reload();
     }
 
@@ -1089,7 +1135,7 @@
             <div>
               <span class="bg-amber-500/20 text-amber-400 border border-amber-500/30 text-[10px] font-bold px-2.5 py-0.5 rounded-full font-mono">${ex.paket}</span>
               <h4 class="font-bold text-white text-base mt-1.5">${ex.subject}</h4>
-              <p class="text-xs text-slate-400">${ex.teacher}</p>
+              <p class="text-xs text-slate-400">Guru: ${ex.teacher}</p>
             </div>
             <span class="text-xs font-mono bg-slate-900 border border-slate-700 px-2.5 py-1 rounded-lg text-emerald-400 font-bold">${ex.durationMinutes} Min</span>
           </div>
@@ -1116,7 +1162,7 @@
       const inputVal = tokenEl ? tokenEl.value.trim().toUpperCase() : '';
       
       if (inputVal !== ex.token) {
-        showToastAlert("Token Keamanan Salah! Token resmi: " + ex.token);
+        showToastAlert("Token Keamanan Salah! Token resmi: " + ex.token, 'warning');
         return;
       }
 
@@ -1174,7 +1220,7 @@
 
     function preventDefaultEvent(e) {
       e.preventDefault();
-      triggerCheatWarning("Tindakan copy-paste dan klik kanan dinonaktifkan demi keamanan ujian!");
+      triggerCheatWarning("Tindakan copy-paste dan klik kanan dinonaktifkan demi keamanan!");
       return false;
     }
 
@@ -1244,6 +1290,11 @@
         st.status = "Curang (Terkunci)";
         st.violations = cheatViolations;
       }
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiUpdateStudentStatus(currentUser.id, "Curang (Terkunci)", cheatViolations);
+      }
+
       renderProctorGrid();
     }
 
@@ -1254,21 +1305,26 @@
         cheatViolations = 0;
         document.getElementById('cheatLockModal').classList.add('hidden');
         document.getElementById('teacherPinInput').value = '';
-        showToastAlert("Kunci Ujian Berhasil Dibuka oleh Pengawas!");
+        showToastAlert("Kunci Ujian Berhasil Dibuka oleh Pengawas!", 'success');
         if (currentUser) {
           resetStudentLock(currentUser.id);
         }
       } else {
-        showToastAlert("PIN Pengawas Salah! Gunakan PIN demo: 1234");
+        showToastAlert("PIN Pengawas Salah! Gunakan PIN demo: 1234", 'warning');
       }
     }
 
     function requestTeacherUnlock() {
-      showToastAlert("Sinyal permintaan buka kunci terkirim ke Guru Pengawas.");
+      showToastAlert("Sinyal permintaan buka kunci terkirim ke Guru Pengampu.", 'info');
+    }
+
+    function getFilteredQuestionsForCurrentTest() {
+      const currentSubject = document.getElementById('cbtSubjectTitle').innerText;
+      return questionsDatabase.filter(q => q.subject === currentSubject || q.paket === activeSelectedPaket);
     }
 
     function renderQuestion() {
-      const filteredQ = questionsDatabase.filter(q => q.paket === activeSelectedPaket || q.paket === 'Paket A');
+      const filteredQ = getFilteredQuestionsForCurrentTest();
       const q = filteredQ[activeQIndex] || filteredQ[0];
       if (!q) return;
 
@@ -1287,14 +1343,11 @@
 
       if (q.audio) {
         html += `
-          <div class="my-3 p-3 rounded-xl bg-slate-900 border border-slate-700 flex items-center gap-3">
-            <button type="button" onclick="playSynthAudio()" class="w-10 h-10 rounded-full bg-amber-500 hover:bg-amber-400 text-slate-950 flex items-center justify-center font-bold text-base transition">
-              <i class="fa-solid fa-play"></i>
-            </button>
-            <div>
-              <div class="text-xs font-bold text-slate-200">Lampiran Audio / Listening Task MP3</div>
-              <div class="text-[10px] text-slate-400">Klik tombol di samping untuk memutar sampel audio</div>
+          <div class="my-3 p-3 rounded-xl bg-slate-900 border border-slate-700 space-y-1">
+            <div class="text-xs font-bold text-slate-200 flex items-center gap-2">
+              <i class="fa-solid fa-file-audio text-amber-400"></i> Lampiran Audio Listening MP3:
             </div>
+            <audio controls src="${q.audio}" class="w-full h-9 rounded-lg mt-1"></audio>
           </div>
         `;
       }
@@ -1307,7 +1360,7 @@
 
       if (q.type === 'PG') {
         const labels = ['A', 'B', 'C', 'D', 'E'];
-        const opts = q.options || ['215', '225', '235', '245', '255'];
+        const opts = q.options || ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'];
         opts.forEach((opt, idx) => {
           const key = labels[idx];
           const isSelected = savedAns === key;
@@ -1322,7 +1375,7 @@
         });
       } else if (q.type === 'PG_KOMPLEKS') {
         const labels = ['A', 'B', 'C', 'D', 'E'];
-        const opts = q.options || ['Angka 2', 'Angka 9', 'Angka 13', 'Angka 15', 'Angka 17'];
+        const opts = q.options || ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'];
         const selectedList = Array.isArray(savedAns) ? savedAns : [];
         opts.forEach((opt, idx) => {
           const key = labels[idx];
@@ -1364,8 +1417,8 @@
         const wrap = document.createElement('div');
         wrap.className = "space-y-3";
 
-        const leftItems = q.leftItems || ['Luas Lingkaran', 'Keliling Lingkaran', 'Luas Segitiga'];
-        const rightOptions = q.rightOptions || ['π × r²', '2 × π × r', '½ × alas × tinggi'];
+        const leftItems = q.leftItems || ['Pernyataan A', 'Pernyataan B', 'Pernyataan C'];
+        const rightOptions = q.rightOptions || ['Jawaban 1', 'Jawaban 2', 'Jawaban 3'];
 
         leftItems.forEach((leftText, leftIdx) => {
           const row = document.createElement('div');
@@ -1451,7 +1504,7 @@
     }
 
     function toggleRaguState() {
-      const filteredQ = questionsDatabase.filter(q => q.paket === activeSelectedPaket || q.paket === 'Paket A');
+      const filteredQ = getFilteredQuestionsForCurrentTest();
       const q = filteredQ[activeQIndex];
       const isChecked = document.getElementById('checkRagu').checked;
       if (!studentAnswers[q.id]) {
@@ -1463,7 +1516,7 @@
     }
 
     function navigateQ(dir) {
-      const filteredQ = questionsDatabase.filter(q => q.paket === activeSelectedPaket || q.paket === 'Paket A');
+      const filteredQ = getFilteredQuestionsForCurrentTest();
       const newIdx = activeQIndex + dir;
       if (newIdx >= 0 && newIdx < filteredQ.length) {
         activeQIndex = newIdx;
@@ -1483,7 +1536,7 @@
       if (!grid) return;
       grid.innerHTML = '';
 
-      const filteredQ = questionsDatabase.filter(q => q.paket === activeSelectedPaket || q.paket === 'Paket A');
+      const filteredQ = getFilteredQuestionsForCurrentTest();
 
       filteredQ.forEach((q, idx) => {
         const ansObj = studentAnswers[q.id];
@@ -1533,31 +1586,13 @@
       }, 1000);
     }
 
-    function playSynthAudio() {
-      try {
-        const ctx = new (window.AudioContext || window.webkitAudioContext)();
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(440, ctx.currentTime);
-        gain.gain.setValueAtTime(0.3, ctx.currentTime);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start();
-        osc.stop(ctx.currentTime + 1.5);
-        showToastAlert("Memutar audio sampel listening MP3...");
-      } catch(e) {
-        showToastAlert("Audio player aktif.");
-      }
-    }
-
     function finishExamConfirmation(auto = false) {
       if (auto) {
         confirmFinishExamAction();
         return;
       }
 
-      const filteredQ = questionsDatabase.filter(q => q.paket === activeSelectedPaket || q.paket === 'Paket A');
+      const filteredQ = getFilteredQuestionsForCurrentTest();
       let answered = 0;
       let ragu = 0;
 
@@ -1598,23 +1633,24 @@
         nis: currentUser ? currentUser.id : "1001",
         name: currentUser ? currentUser.name : "Ahmad Risky",
         class: currentUser ? currentUser.class : "XII IPA 1",
-        subject: document.getElementById('cbtSubjectTitle').innerText || "Matematika",
+        subject: document.getElementById('cbtSubjectTitle').innerText || "Informatika",
         finishTime: new Date().toLocaleTimeString() + " WIB",
         status: "Jujur (Tanpa Pelanggaran)",
-        score: Math.floor(82 + Math.random() * 18)
+        score: Math.floor(82 + Math.random() * 18),
+        violations: cheatViolations
       };
 
       completedLaporanDatabase.push(resObj);
 
-      // Trigger Apps Script API sync if running on Google Apps Script
       if (typeof google !== 'undefined' && google.script && google.script.run) {
         google.script.run.apiSaveResult(resObj);
+        google.script.run.apiUpdateStudentStatus(resObj.nis, "Normal (Selesai Ujian)", 0);
       }
 
       renderStudentResultsTable();
       renderAdminLaporanTable();
 
-      showToastAlert("SELAMAT! Ujian telah selesai dikerjakan dan jawaban tersimpan secara aman.");
+      showToastAlert("SELAMAT! Ujian telah selesai dikerjakan dan jawaban tersimpan.", 'success');
       
       document.getElementById('muridTestView').classList.add('hidden');
       document.getElementById('muridDashboardView').classList.remove('hidden');
@@ -1668,6 +1704,7 @@
       }
     }
 
+    // STRICT 1 GURU = 1 MAPEL FILTERING FOR GURU BANK SOAL
     function renderGuruQuestions() {
       const list = document.getElementById('guruQuestionList');
       if (!list) return;
@@ -1675,21 +1712,37 @@
       const filterPaket = document.getElementById('guruFilterPaket').value;
       list.innerHTML = '';
 
-      let filtered = questionsDatabase;
-      if (filterPaket !== 'ALL') filtered = questionsDatabase.filter(q => q.paket === filterPaket);
+      // Filter specifically for logged-in teacher's assigned subject!
+      const currentSubject = currentUser ? currentUser.subject : 'Informatika';
+      let filtered = questionsDatabase.filter(q => q.subject === currentSubject);
+
+      if (filterPaket !== 'ALL') {
+        filtered = filtered.filter(q => q.paket === filterPaket);
+      }
 
       document.getElementById('countGuruSoal').innerText = filtered.length;
+
+      if (filtered.length === 0) {
+        list.innerHTML = `
+          <div class="bg-slate-800 border border-slate-700/80 p-8 rounded-xl text-center text-slate-400 space-y-2">
+            <i class="fa-solid fa-folder-open text-3xl text-slate-600"></i>
+            <div class="font-semibold text-slate-300 text-sm">Belum ada soal untuk mata pelajaran ${currentSubject}.</div>
+            <p class="text-xs">Klik "Buat Soal Manual" atau "Import Link/File .Doc" di atas untuk menambahkan soal baru.</p>
+          </div>
+        `;
+        return;
+      }
 
       filtered.forEach((q, idx) => {
         const card = document.createElement('div');
         card.className = "bg-slate-800 border border-slate-700 p-4 rounded-xl flex items-start justify-between gap-4";
         card.innerHTML = `
           <div class="space-y-1">
-            <div class="flex items-center gap-2">
+            <div class="flex flex-wrap items-center gap-2">
               <span class="text-xs font-bold bg-slate-900 px-2 py-0.5 rounded text-emerald-400">Soal #${idx + 1}</span>
               <span class="text-[11px] bg-amber-500/20 text-amber-300 px-2 py-0.5 rounded font-mono font-bold">${q.paket}</span>
+              <span class="text-[11px] bg-teal-500/20 text-teal-300 px-2 py-0.5 rounded font-mono font-semibold">${q.subject}</span>
               <span class="text-[11px] bg-slate-700 px-2 py-0.5 rounded text-slate-300 font-mono">${getQTypeName(q.type)}</span>
-              <span class="text-[11px] text-slate-400">Oleh: ${q.guruName} (${q.subject})</span>
             </div>
             <p class="text-sm font-medium text-slate-200 mt-1">${q.question}</p>
             <div class="text-xs text-slate-400">Kunci Jawaban: <span class="text-amber-400 font-mono font-bold">${JSON.stringify(q.key)}</span></div>
@@ -1759,7 +1812,7 @@
           </div>
 
           <div class="text-xs font-mono text-slate-400 space-y-0.5 bg-slate-900 p-2 rounded-lg">
-            <div>Sesi: Secure Browser Lock</div>
+            <div>Sesi Ujian: Secure Browser Lock</div>
             <div>Pelanggaran: <span class="text-red-400 font-bold">${st.violations}x</span></div>
           </div>
 
@@ -1784,7 +1837,11 @@
         document.getElementById('cheatLockModal').classList.add('hidden');
       }
 
-      showToastAlert("Akses perangkat NIS " + studentId + " dibuka kembali.");
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiUpdateStudentStatus(studentId, "Normal", 0);
+      }
+
+      showToastAlert("Akses perangkat NIS " + studentId + " dibuka kembali.", 'success');
       renderProctorGrid();
     }
 
@@ -1796,7 +1853,7 @@
       isLockedOut = false;
       cheatViolations = 0;
       document.getElementById('cheatLockModal').classList.add('hidden');
-      showToastAlert("Seluruh kunci perangkat 1,200 murid di-reset oleh Admin.");
+      showToastAlert("Seluruh kunci perangkat di-reset oleh Admin.", 'success');
       renderProctorGrid();
     }
 
@@ -1812,7 +1869,7 @@
           <td class="p-2.5 font-mono text-slate-500">${i + 1}</td>
           <td class="p-2.5 font-mono text-emerald-400">${t.nip}</td>
           <td class="p-2.5 font-semibold text-slate-200">${t.name}</td>
-          <td class="p-2.5 text-slate-300"><span class="bg-slate-900 px-2 py-0.5 rounded border border-slate-700">${t.subject}</span></td>
+          <td class="p-2.5 text-slate-300"><span class="bg-slate-900 text-teal-300 font-semibold px-2.5 py-1 rounded border border-slate-700">${t.subject}</span></td>
           <td class="p-2.5 text-amber-400 font-mono font-bold">Paket A, B, C</td>
         `;
         table.appendChild(tr);
@@ -1820,6 +1877,12 @@
 
       const countEl = document.getElementById('adminCountGuru');
       if (countEl) countEl.innerText = teachersDatabase.length + " Guru";
+
+      const countStudEl = document.getElementById('adminCountStudent');
+      if (countStudEl) countStudEl.innerText = studentsDatabase.length + " Siswa";
+
+      const countGuruStudEl = document.getElementById('guruTotalStudentsCount');
+      if (countGuruStudEl) countGuruStudEl.innerText = studentsDatabase.length;
     }
 
     function renderStudentResultsTable() {
@@ -1827,14 +1890,29 @@
       if (!table) return;
       table.innerHTML = '';
 
-      completedLaporanDatabase.forEach(item => {
+      // Filter by current teacher's subject if logged in as guru
+      let dataset = completedLaporanDatabase;
+      if (currentUser && currentUser.role === 'guru') {
+        dataset = completedLaporanDatabase.filter(item => item.subject === currentUser.subject);
+      }
+
+      if (dataset.length === 0) {
+        table.innerHTML = `
+          <tr>
+            <td colspan="7" class="p-6 text-center text-slate-400">Belum ada data nilai pengerjaan murid untuk mapel ini.</td>
+          </tr>
+        `;
+        return;
+      }
+
+      dataset.forEach(item => {
         const tr = document.createElement('tr');
         tr.className = "hover:bg-slate-800/50";
         tr.innerHTML = `
           <td class="p-3 font-mono text-emerald-400">${item.nis}</td>
           <td class="p-3 font-semibold text-white">${item.name}</td>
           <td class="p-3 text-slate-300">${item.class}</td>
-          <td class="p-3 text-slate-300">${item.subject}</td>
+          <td class="p-3 text-teal-300 font-semibold">${item.subject}</td>
           <td class="p-3 font-mono text-amber-400">Paket A</td>
           <td class="p-3 font-mono font-bold text-emerald-400">${item.score} / 100</td>
           <td class="p-3"><span class="bg-emerald-950 text-emerald-400 border border-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold">${item.status}</span></td>
@@ -1855,122 +1933,345 @@
           <td class="p-3 font-mono text-emerald-400">${item.nis}</td>
           <td class="p-3 font-semibold text-white">${item.name}</td>
           <td class="p-3 text-slate-300">${item.class}</td>
-          <td class="p-3 text-slate-300">${item.subject}</td>
+          <td class="p-3 text-teal-300 font-semibold">${item.subject}</td>
           <td class="p-3 text-slate-400 font-mono">${item.finishTime}</td>
           <td class="p-3"><span class="bg-emerald-950 text-emerald-400 border border-emerald-600 text-[10px] px-2 py-0.5 rounded-full font-bold">${item.status}</span></td>
-          <td class="p-3 font-mono font-bold text-teal-400">${item.score}</td>
+          <td class="p-3 font-mono font-bold text-emerald-400">${item.score} / 100</td>
         `;
         table.appendChild(tr);
       });
     }
 
-    function exportResultsExcel() {
-      try {
-        const worksheet = XLSX.utils.json_to_sheet(completedLaporanDatabase);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Ujian");
-        XLSX.writeFile(workbook, "Hasil_Ujian_Murid_CBT.xlsx");
-        showToastAlert("File Excel (.xlsx) berhasil diunduh.");
-      } catch(err) {
-        showToastAlert("Memproses download rekapitulasi data...");
-      }
+    function openDocLinkModal() { 
+      const subject = currentUser ? currentUser.subject : 'Informatika';
+      document.getElementById('docTargetSubjectDisplay').innerText = subject;
+      document.getElementById('docLinkModal').classList.remove('hidden'); 
     }
-
-    function exportResultsPDF() {
-      window.print();
-    }
-
-    function exportLaporanSelesaiExcel() {
-      try {
-        const worksheet = XLSX.utils.json_to_sheet(completedLaporanDatabase);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Laporan Selesai Ujian");
-        XLSX.writeFile(workbook, "Laporan_Ujian_Jujur_CBT.xlsx");
-        showToastAlert("Laporan Selesai Ujian berhasil diunduh.");
-      } catch(err) {
-        showToastAlert("Memproses export Excel laporan...");
-      }
-    }
-
-    function openDocLinkModal() { document.getElementById('docLinkModal').classList.remove('hidden'); }
     function closeDocLinkModal() { document.getElementById('docLinkModal').classList.add('hidden'); }
 
-    function processDocUrlImport() {
-      const url = document.getElementById('docUrlInput').value.trim();
-      if (!url) { showToastAlert("Masukkan link Google Doc terlebih dahulu!"); return; }
+    function parseTaggedQuestionsText(rawText) {
+      if (!rawText) return [];
       
-      const newQ = {
-        id: questionsDatabase.length + 1,
-        paket: 'Paket A',
-        type: 'PG',
-        question: 'Soal Import Link Doc: Berapakah hasil kalkulasi turunan f(x) = 3x² + 5x ?',
-        options: ['6x + 5', '3x + 5', '6x - 2', '5x + 3', '6x²'],
-        key: 'A',
-        guruName: currentUser ? currentUser.name : 'Guru',
-        subject: currentUser ? currentUser.subject : 'Matematika'
-      };
+      const questionsList = [];
+      const blocks = rawText.split(/\[SOAL\]/i);
 
-      questionsDatabase.push(newQ);
+      const targetSubject = currentUser ? currentUser.subject : 'Informatika';
+      const targetGuru = currentUser ? currentUser.name : 'Guru Mapel';
 
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.apiSaveQuestion(newQ);
+      blocks.forEach(block => {
+        const trimmed = block.trim();
+        if (!trimmed) return;
+
+        let questionText = "";
+        const options = [];
+        let key = "A";
+
+        const lines = trimmed.split(/\r?\n/);
+        lines.forEach(line => {
+          const l = line.trim();
+          if (!l) return;
+
+          if (l.match(/^\[A\]\.?/i)) options[0] = l.replace(/^\[A\]\.?\s*/i, '');
+          else if (l.match(/^\[B\]\.?/i)) options[1] = l.replace(/^\[B\]\.?\s*/i, '');
+          else if (l.match(/^\[C\]\.?/i)) options[2] = l.replace(/^\[C\]\.?\s*/i, '');
+          else if (l.match(/^\[D\]\.?/i)) options[3] = l.replace(/^\[D\]\.?\s*/i, '');
+          else if (l.match(/^\[E\]\.?/i)) options[4] = l.replace(/^\[E\]\.?\s*/i, '');
+          else if (l.match(/^\[KUNCI:\s*([A-E])\]/i)) {
+            const match = l.match(/^\[KUNCI:\s*([A-E])\]/i);
+            if (match) key = match[1].toUpperCase();
+          } else {
+            if (options.length === 0) {
+              questionText += (questionText ? "\n" : "") + l;
+            }
+          }
+        });
+
+        if (questionText) {
+          questionsList.push({
+            id: Date.now() + Math.floor(Math.random() * 10000),
+            paket: document.getElementById('docImportPaketSelect').value || 'Paket A',
+            type: 'PG',
+            question: questionText,
+            options: options.length >= 2 ? options : ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'],
+            key: key,
+            guruName: targetGuru,
+            subject: targetSubject, // Locked to 1 Teacher = 1 Subject
+            image: null,
+            audio: null
+          });
+        }
+      });
+
+      return questionsList;
+    }
+
+    function processDocTextImport() {
+      const docUrl = document.getElementById('docLinkUrlInput').value.trim();
+      const textVal = document.getElementById('docTextInput').value.trim();
+      const paket = document.getElementById('docImportPaketSelect').value;
+      const targetSubject = currentUser ? currentUser.subject : 'Informatika';
+
+      if (!textVal && !docUrl) {
+        showToastAlert("Masukkan teks naskah berformat tag [SOAL] atau Link Google Doc!", 'warning');
+        return;
       }
 
+      let parsedQuestions = parseTaggedQuestionsText(textVal);
+      if (parsedQuestions.length === 0 && textVal) {
+        parsedQuestions.push({
+          id: Date.now(),
+          paket: paket,
+          type: 'PG',
+          question: textVal,
+          options: ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'],
+          key: 'B',
+          guruName: currentUser ? currentUser.name : 'Guru Mapel',
+          subject: targetSubject,
+          docLinkSource: docUrl || 'Direct Paste Text'
+        });
+      }
+
+      parsedQuestions.forEach(q => {
+        q.paket = paket;
+        q.subject = targetSubject; // 1 Guru = 1 Mapel restriction
+        if (docUrl) q.docLinkSource = docUrl;
+        questionsDatabase.push(q);
+      });
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiBatchSaveQuestions(parsedQuestions, docUrl || "Doc Text Import");
+      }
+
+      document.getElementById('docTextInput').value = '';
       closeDocLinkModal();
       renderGuruQuestions();
       renderAdminQuestions();
-      showToastAlert("Berhasil mengimpor soal dari Link Google Doc!");
+      showToastAlert(`Berhasil mengimport ${parsedQuestions.length} Soal (${targetSubject}) ke Google Sheets!`, 'success');
     }
 
     function processDocFileImport(e) {
       const file = e.target.files[0];
       if (!file) return;
 
-      const newQ = {
-        id: questionsDatabase.length + 1,
-        paket: 'Paket B',
-        type: 'PG',
-        question: 'Soal File ' + file.name + ': Apakah zat pembawa sifat keturunan pada makhluk hidup?',
-        options: ['DNA dan RNA', 'Protein', 'Enzim', 'Karbohidrat', 'Klorofil'],
-        key: 'A',
-        guruName: currentUser ? currentUser.name : 'Guru',
-        subject: currentUser ? currentUser.subject : 'Biologi'
+      const reader = new FileReader();
+      reader.onload = function(evt) {
+        const content = evt.target.result;
+        const parsedQuestions = parseTaggedQuestionsText(content);
+        const paket = document.getElementById('docImportPaketSelect').value;
+        const targetSubject = currentUser ? currentUser.subject : 'Informatika';
+
+        if (parsedQuestions.length > 0) {
+          parsedQuestions.forEach(q => {
+            q.paket = paket;
+            q.subject = targetSubject;
+            q.docLinkSource = "File Import: " + file.name;
+            questionsDatabase.push(q);
+          });
+
+          if (typeof google !== 'undefined' && google.script && google.script.run) {
+            google.script.run.apiBatchSaveQuestions(parsedQuestions, "File Import: " + file.name);
+          }
+
+          closeDocLinkModal();
+          renderGuruQuestions();
+          renderAdminQuestions();
+          showToastAlert(`Berhasil mengimport ${parsedQuestions.length} Soal (${targetSubject}) dari file!`, 'success');
+        } else {
+          showToastAlert("File berhasil dibaca.", 'info');
+        }
       };
-
-      questionsDatabase.push(newQ);
-
-      if (typeof google !== 'undefined' && google.script && google.script.run) {
-        google.script.run.apiSaveQuestion(newQ);
-      }
-
-      closeDocLinkModal();
-      renderGuruQuestions();
-      renderAdminQuestions();
-      showToastAlert("File .doc / .docx berhasil dideteksi dan diimpor!");
+      reader.readAsText(file);
     }
 
-    function openQuestionModal() { document.getElementById('questionModal').classList.remove('hidden'); }
+    function openQuestionModal() { 
+      const subject = currentUser ? currentUser.subject : 'Informatika';
+      document.getElementById('qSubjectLocked').value = subject;
+      document.getElementById('questionModal').classList.remove('hidden'); 
+      renderDynamicQuestionInputs();
+    }
     function closeQuestionModal() { document.getElementById('questionModal').classList.add('hidden'); }
+
+    function renderDynamicQuestionInputs() {
+      const qTypeSelect = document.getElementById('qTypeSelect');
+      if (!qTypeSelect) return;
+      const qType = qTypeSelect.value;
+      const container = document.getElementById('dynamicAnswerFieldsContainer');
+      if (!container) return;
+
+      if (qType === 'PG') {
+        container.innerHTML = `
+          <div class="space-y-2">
+            <label class="block font-bold text-emerald-400">Pilihan Jawaban (A - E) & Pilih 1 Kunci Jawaban Benar:</label>
+            <div class="space-y-2">
+              ${['A','B','C','D','E'].map((label, i) => `
+                <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                  <input type="radio" name="pgKeyRadio" value="${label}" ${i === 1 ? 'checked' : ''} class="w-4 h-4 text-emerald-500 bg-slate-800 border-slate-600 focus:ring-emerald-500 cursor-pointer">
+                  <span class="font-mono font-bold text-amber-400 w-5">${label}.</span>
+                  <input type="text" id="qOpt_${label}" required placeholder="Isi pilihan jawaban ${label}" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (qType === 'PG_KOMPLEKS') {
+        container.innerHTML = `
+          <div class="space-y-2">
+            <label class="block font-bold text-emerald-400">Pilihan Jawaban (A - E) & Centang Kunci Jawaban Benar (Bisa >1):</label>
+            <div class="space-y-2">
+              ${['A','B','C','D','E'].map((label, i) => `
+                <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                  <input type="checkbox" id="qKeyCheck_${label}" value="${label}" ${i === 0 || i === 2 ? 'checked' : ''} class="w-4 h-4 text-emerald-500 rounded bg-slate-800 border-slate-600 focus:ring-emerald-500 cursor-pointer">
+                  <span class="font-mono font-bold text-amber-400 w-5">${label}.</span>
+                  <input type="text" id="qOpt_${label}" required placeholder="Isi pilihan jawaban ${label}" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (qType === 'PENGURUTAN') {
+        container.innerHTML = `
+          <div class="space-y-2">
+            <label class="block font-bold text-emerald-400">Input Urutan Langkah Benar (Dari Awal s/d Akhir):</label>
+            <div class="space-y-2">
+              ${[1, 2, 3, 4].map(idx => `
+                <div class="flex items-center gap-2 bg-slate-900 p-2 rounded-lg border border-slate-700">
+                  <span class="font-mono font-bold text-sky-400 w-20">Langkah ${idx}:</span>
+                  <input type="text" id="qSeq_${idx - 1}" required placeholder="Teks langkah ke-${idx}" class="flex-1 bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (qType === 'PENJODOHAN') {
+        container.innerHTML = `
+          <div class="space-y-2">
+            <label class="block font-bold text-emerald-400">Pasangan Item Penjodohan (Baris Sama = Pasangan Cocok):</label>
+            <div class="space-y-2">
+              ${[1, 2, 3].map(idx => `
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-slate-900 p-2.5 rounded-lg border border-slate-700">
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">Pernyataan/Istilah Kiri #${idx}:</span>
+                    <input type="text" id="qMatchLeft_${idx - 1}" required placeholder="Contoh: Istilah ${idx}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                  </div>
+                  <div>
+                    <span class="text-[10px] text-slate-400 font-semibold block mb-0.5">Pasangan Kanan #${idx}:</span>
+                    <input type="text" id="qMatchRight_${idx - 1}" required placeholder="Contoh: Definisi ${idx}" class="w-full bg-slate-800 border border-slate-700 rounded-lg px-2.5 py-1.5 text-xs text-white focus:outline-none focus:border-emerald-500">
+                  </div>
+                </div>
+              `).join('')}
+            </div>
+          </div>
+        `;
+      } else if (qType === 'ESSAY') {
+        container.innerHTML = `
+          <div class="space-y-2">
+            <label class="block font-bold text-emerald-400">Pedoman Kunci Jawaban / Rubrik Penskoran Essay:</label>
+            <textarea id="qRubricInput" required rows="3" placeholder="Contoh: Kriteria Penilaian: Definisi tepat (50%), Menyebutkan 2 contoh (50%)" class="w-full bg-slate-900 border border-slate-700 rounded-xl p-3 text-xs text-white focus:outline-none focus:border-emerald-500"></textarea>
+          </div>
+        `;
+      }
+    }
+
+    function handleQuestionImageUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('qImageUrlHidden').value = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
+
+    function handleQuestionAudioUpload(e) {
+      const file = e.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(evt) {
+          document.getElementById('qAudioUrlHidden').value = evt.target.result;
+        };
+        reader.readAsDataURL(file);
+      }
+    }
 
     function saveManualQuestion(e) {
       e.preventDefault();
       const paket = document.getElementById('qPaketSelect').value;
       const type = document.getElementById('qTypeSelect').value;
-      const text = document.getElementById('qTextPrompt').value;
-      const key = document.getElementById('qKeyInput').value;
+      const text = document.getElementById('qTextPrompt').value.trim();
+      const imageUrl = document.getElementById('qImageUrlHidden').value || null;
+      const audioUrl = document.getElementById('qAudioUrlHidden').value || null;
 
-      const newQ = {
-        id: questionsDatabase.length + 1,
+      // Restrict subject specifically to logged in teacher's subject
+      const assignedSubject = currentUser ? currentUser.subject : 'Informatika';
+
+      let newQ = {
+        id: Date.now() + Math.floor(Math.random() * 1000),
         paket: paket,
         type: type,
         question: text,
-        options: ['Opsi A', 'Opsi B', 'Opsi C', 'Opsi D', 'Opsi E'],
-        key: key,
-        guruName: currentUser ? currentUser.name : 'Guru',
-        subject: currentUser ? currentUser.subject : 'Matematika',
-        image: 'https://placehold.co/600x200/1e293b/22c55e?text=Lampiran+Gambar+Manual',
-        audio: 'synth'
+        guruName: currentUser ? currentUser.name : 'Guru Mapel',
+        subject: assignedSubject, // Restricted 1 Guru = 1 Mapel
+        image: imageUrl,
+        audio: audioUrl,
+        docLinkSource: 'Input Manual Guru'
       };
+
+      if (type === 'PG') {
+        const opts = ['A','B','C','D','E'].map(label => {
+          const el = document.getElementById('qOpt_' + label);
+          return el ? el.value.trim() : '';
+        });
+        const selectedRadio = document.querySelector('input[name="pgKeyRadio"]:checked');
+        const keyVal = selectedRadio ? selectedRadio.value : 'A';
+
+        newQ.options = opts;
+        newQ.key = keyVal;
+      } else if (type === 'PG_KOMPLEKS') {
+        const opts = ['A','B','C','D','E'].map(label => {
+          const el = document.getElementById('qOpt_' + label);
+          return el ? el.value.trim() : '';
+        });
+        const keyArr = [];
+        ['A','B','C','D','E'].forEach(label => {
+          const chk = document.getElementById('qKeyCheck_' + label);
+          if (chk && chk.checked) keyArr.push(label);
+        });
+
+        newQ.options = opts;
+        newQ.key = keyArr.length > 0 ? keyArr : ['A'];
+      } else if (type === 'PENGURUTAN') {
+        const itemsArr = [0, 1, 2, 3].map(idx => {
+          const el = document.getElementById('qSeq_' + idx);
+          return el ? el.value.trim() : `Langkah ${idx + 1}`;
+        });
+
+        newQ.items = itemsArr;
+        newQ.key = [0, 1, 2, 3];
+      } else if (type === 'PENJODOHAN') {
+        const lefts = [];
+        const rights = [];
+        const keyObj = {};
+
+        [0, 1, 2].forEach(idx => {
+          const lEl = document.getElementById('qMatchLeft_' + idx);
+          const rEl = document.getElementById('qMatchRight_' + idx);
+          if (lEl && rEl) {
+            lefts.push(lEl.value.trim());
+            rights.push(rEl.value.trim());
+            keyObj[idx] = idx;
+          }
+        });
+
+        newQ.leftItems = lefts;
+        newQ.rightOptions = rights;
+        newQ.key = keyObj;
+      } else if (type === 'ESSAY') {
+        const rubricEl = document.getElementById('qRubricInput');
+        const rubric = rubricEl ? rubricEl.value.trim() : '';
+        newQ.keyRubric = rubric;
+        newQ.key = rubric;
+      }
 
       questionsDatabase.push(newQ);
 
@@ -1978,17 +2279,24 @@
         google.script.run.apiSaveQuestion(newQ);
       }
 
+      document.getElementById('qImageUrlHidden').value = '';
+      document.getElementById('qAudioUrlHidden').value = '';
+      const imgInput = document.getElementById('qImageFile');
+      if (imgInput) imgInput.value = '';
+      const audInput = document.getElementById('qAudioFile');
+      if (audInput) audInput.value = '';
+
       closeQuestionModal();
       renderGuruQuestions();
       renderAdminQuestions();
-      showToastAlert("Soal manual berhasil disimpan ke " + paket + "!");
+      showToastAlert(`Soal (${assignedSubject}) berhasil disimpan ke Google Sheets!`, 'success');
     }
 
     function deleteQuestion(id) {
       questionsDatabase = questionsDatabase.filter(q => q.id !== id);
       renderGuruQuestions();
       renderAdminQuestions();
-      showToastAlert("Soal berhasil dihapus.");
+      showToastAlert("Soal berhasil dihapus.", 'info');
     }
 
     function openExcelImportModal() { document.getElementById('excelImportModal').classList.remove('hidden'); }
@@ -1998,15 +2306,22 @@
       const file = e.target.files[0];
       if (!file) return;
 
-      teachersDatabase.push({
+      const newTeacher = {
         nip: "19850" + (teachersDatabase.length + 10),
         name: "Guru Excel " + file.name.substring(0, 5) + " S.Pd",
         subject: "Mapel Tambahan Excel",
         pakets: ['Paket A', 'Paket B', 'Paket C']
-      });
+      };
+
+      teachersDatabase.push(newTeacher);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiSaveTeacher(newTeacher);
+      }
+
       closeExcelImportModal();
       renderAdminTeacherTable();
-      showToastAlert("Data Mapel & Guru dari Excel berhasil ditambahkan massal!");
+      showToastAlert("Data Mapel & Guru dari Excel berhasil diimport!", 'success');
     }
 
     function downloadSampleExcelFormat() {
@@ -2020,24 +2335,60 @@
         XLSX.utils.book_append_sheet(workbook, worksheet, "Format Guru");
         XLSX.writeFile(workbook, "Format_Import_Guru_Mapel.xlsx");
       } catch(err) {
-        showToastAlert("Format Excel diunduh.");
+        showToastAlert("Format Excel diunduh.", 'info');
       }
     }
 
-    function openTimerConfigModal() { document.getElementById('timerModal').classList.remove('hidden'); }
+    function openTimerConfigModal() { 
+      const subject = currentUser ? currentUser.subject : 'Informatika';
+      document.getElementById('timerSubjectDisplay').innerText = subject;
+      document.getElementById('timerModal').classList.remove('hidden'); 
+    }
     function closeTimerConfigModal() { document.getElementById('timerModal').classList.add('hidden'); }
 
     function saveTimerConfig(e) {
       e.preventDefault();
       const mins = parseInt(document.getElementById('timerMinutesInput').value);
       const token = document.getElementById('tokenConfigInput').value.trim().toUpperCase();
+      const selectedPaket = document.getElementById('timerPaketSelect').value;
 
-      activeExamPackages[0].durationMinutes = mins;
-      activeExamPackages[0].token = token;
+      const activeSubject = currentUser ? currentUser.subject : 'Informatika';
+      const activeTeacher = currentUser ? currentUser.name : 'Budi Santoso, S.Pd';
+
+      const existingIndex = activeExamPackages.findIndex(ex => ex.subject === activeSubject && ex.paket === selectedPaket);
+
+      if (existingIndex >= 0) {
+        activeExamPackages[existingIndex].durationMinutes = mins;
+        activeExamPackages[existingIndex].token = token;
+        activeExamPackages[existingIndex].teacher = activeTeacher;
+      } else {
+        activeExamPackages.push({
+          id: 'ex_' + Date.now(),
+          subject: activeSubject,
+          teacher: activeTeacher,
+          paket: selectedPaket,
+          token: token,
+          durationMinutes: mins
+        });
+      }
+
+      const examData = {
+        id: 'ex_' + activeSubject.replace(/\s+/g, '_') + '_' + selectedPaket.replace(/\s+/g, ''),
+        subject: activeSubject,
+        teacher: activeTeacher,
+        paket: selectedPaket,
+        token: token,
+        durationMinutes: mins,
+        docLinkSource: 'Atur Timer & Token Guru'
+      };
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiPublishExam(examData);
+      }
 
       closeTimerConfigModal();
       renderStudentExamGrid();
-      showToastAlert("Timer ujian diubah menjadi " + mins + " Menit. Token: " + token);
+      showToastAlert(`Timer & Token (${token}) terbit untuk Mapel ${activeSubject} (${selectedPaket})!`, 'success');
     }
 
     function handleAdminAddTeacher(e) {
@@ -2046,30 +2397,67 @@
       const name = document.getElementById('addGuruName').value.trim();
       const subject = document.getElementById('addGuruSubject').value.trim();
 
-      teachersDatabase.push({
-        nip: nip,
-        name: name,
-        subject: subject,
-        pakets: ['Paket A', 'Paket B', 'Paket C']
-      });
+      const newT = { nip, name, subject, pakets: ['Paket A', 'Paket B', 'Paket C'] };
+      teachersDatabase.push(newT);
+
+      if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.apiSaveTeacher(newT);
+      }
 
       renderAdminTeacherTable();
-      showToastAlert("Guru " + name + " (1 Mapel = 3 Paket) berhasil ditambahkan!");
+      showToastAlert(`Guru ${name} (${subject}) tersimpan ke Google Sheets!`, 'success');
+      e.target.reset();
     }
 
-    function showToastAlert(msg) {
-      const toast = document.createElement('div');
-      toast.className = "fixed bottom-5 right-5 z-[99999] bg-emerald-500 text-slate-950 px-4 py-3 rounded-xl font-bold text-xs shadow-2xl flex items-center gap-2 border border-emerald-300 animate-bounce";
-      toast.innerHTML = `<i class="fa-solid fa-circle-info"></i> ${msg}`;
-      document.body.appendChild(toast);
-      setTimeout(() => toast.remove(), 3000);
+    function exportResultsExcel() {
+      try {
+        let dataset = completedLaporanDatabase;
+        if (currentUser && currentUser.role === 'guru') {
+          dataset = completedLaporanDatabase.filter(item => item.subject === currentUser.subject);
+        }
+        const worksheet = XLSX.utils.json_to_sheet(dataset);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Ujian");
+        XLSX.writeFile(workbook, `Hasil_Ujian_${currentUser ? currentUser.subject : 'CBT'}.xlsx`);
+      } catch(e) {
+        showToastAlert("Mengunduh laporan Excel...", 'info');
+      }
+    }
+
+    function exportResultsPDF() {
+      window.print();
+    }
+
+    function exportLaporanSelesaiExcel() {
+      exportResultsExcel();
     }
 
     window.onload = function() {
       initMasterData();
 
-      // Load questions from Google Apps Script if hosted on Apps Script
       if (typeof google !== 'undefined' && google.script && google.script.run) {
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.success && res.data && res.data.length > 0) {
+            teachersDatabase = res.data;
+            renderAdminTeacherTable();
+          }
+        }).apiGetTeachers();
+
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.success && res.data && res.data.length > 0) {
+            studentsDatabase = res.data;
+            renderProctorGrid();
+            renderAdminTeacherTable();
+          }
+        }).apiGetStudents();
+
+        google.script.run.withSuccessHandler(function(res) {
+          if (res && res.success && res.data && res.data.length > 0) {
+            activeExamPackages = res.data;
+            renderStudentExamGrid();
+          }
+        }).apiGetExams();
+
         google.script.run.withSuccessHandler(function(res) {
           if (res && res.success && res.data && res.data.length > 0) {
             questionsDatabase = res.data;
