@@ -12,6 +12,8 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- PDF.js for PDF extraction -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
+    <!-- SheetJS (XLSX) for Excel import and processing -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
         tailwind.config = {
@@ -118,7 +120,7 @@
 
     <script>
         // SINKRONISASI GOOGLE APPS SCRIPT API URL (TEMPATKAN WEB APP URL ANDA DI SINI):
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzy_mdu_nawSHty-fFimZ9O9QUEtfz4VdU8nv08Wg0BOjTGlwulWB5NbMgB07lKJr3P/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbxhnEpb_WrIcVIuL2pGzj_HuW1Tui22lFK-iLuFz8J9L9GquKNCDR3xg5oh2RNs-FM/exec";
 
         const DB = {
             admin: { id: "ADMIN01", name: "Administrator Utama", role: "admin" },
@@ -192,12 +194,27 @@
             teacherSelectedPkg: 'A',
 
             // Admin Dashboard State
-            adminActiveTab: 'publication', // 'publication', 'cheat', 'results', 'users'
+            adminActiveTab: 'publication', // 'publication', 'cheat', 'results', 'users_data', 'users'
 
             init() {
                 this.generateDeviceFingerprint();
                 this.setupSecurityListeners();
+                this.syncUsersFromBackend();
                 this.renderLoginView();
+            },
+
+            async syncUsersFromBackend() {
+                const remote = await apiCall('getUsers');
+                if (remote && remote.status === 'success' && remote.data) {
+                    const st = [];
+                    const tc = [];
+                    remote.data.forEach(u => {
+                        if (u.role === 'student') st.push({ nis: u.id, name: u.name, class: u.class, deviceId: u.deviceId });
+                        else if (u.role === 'teacher') tc.push({ nip: u.id, name: u.name, subject: 'Terikat Mapel', subjectId: 'SUB-' + u.id });
+                    });
+                    if (st.length > 0) DB.students = st;
+                    if (tc.length > 0) DB.teachers = tc;
+                }
             },
 
             generateDeviceFingerprint() {
@@ -738,7 +755,6 @@
                 const body = document.getElementById('appBody');
                 const tc = this.currentUser;
 
-                // Lock teacher to their bound subject (1 Guru = 1 Mata Pelajaran)
                 const assignedSub = DB.subjects.find(s => String(s.teacherNip) === String(tc.nip) || s.id === tc.subjectId);
                 if (assignedSub) {
                     this.teacherSelectedSubject = assignedSub.id;
@@ -764,7 +780,7 @@
                                 <p class="text-xs text-slate-500 mt-0.5">${tc.name} | NIP: ${tc.nip}</p>
                             </div>
                             
-                            <!-- Selector Mapel & Paket Soal (Mata Pelajaran Terikat Langsung Per Guru) -->
+                            <!-- Selector Mapel & Paket Soal -->
                             <div class="flex items-center gap-2">
                                 <div class="px-3.5 py-2 border border-purple-200 rounded-xl text-xs font-bold text-purple-900 bg-purple-50 flex items-center gap-2 shadow-sm">
                                     <i class="fa-solid fa-book-bookmark text-purple-600"></i>
@@ -1254,7 +1270,7 @@
                                 <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
                                     <i class="fa-solid fa-user-shield text-emerald-600"></i> Panel Administrator
                                 </h2>
-                                <p class="text-xs text-slate-500">Kontrol Publikasi Paket Soal & Monitoring Pelanggaran Ujian</p>
+                                <p class="text-xs text-slate-500">Kontrol Publikasi Paket Soal, Data User, & Monitoring Pelanggaran</p>
                             </div>
                             <button onclick="EduGuard.triggerAutoSetupDatabase()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 shadow-md active:scale-95">
                                 <i class="fa-solid fa-database"></i> Inisialisasi Database Google Sheets
@@ -1272,8 +1288,11 @@
                             <button onclick="EduGuard.switchAdminTab('results')" class="px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition ${activeTab === 'results' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}">
                                 <i class="fa-solid fa-file-invoice"></i> 3. Hasil Akhir & Laporan
                             </button>
+                            <button onclick="EduGuard.switchAdminTab('users_data')" class="px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition ${activeTab === 'users_data' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}">
+                                <i class="fa-solid fa-users"></i> 4. Data Guru & Murid
+                            </button>
                             <button onclick="EduGuard.switchAdminTab('users')" class="px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition ${activeTab === 'users' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}">
-                                <i class="fa-solid fa-users-gear"></i> 4. User & Unbind HP
+                                <i class="fa-solid fa-mobile-screen-button"></i> 5. Device Lock & Unbind
                             </button>
                         </div>
 
@@ -1418,6 +1437,110 @@
                             </div>
                         </div>
                     `;
+                } else if (tab === 'users_data') {
+                    return `
+                        <div class="space-y-6">
+                            <!-- TAB SUBNAV: Input Manual & Import Excel -->
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                
+                                <!-- FORM INPUT MANUAL -->
+                                <div class="bg-slate-50 border p-4 rounded-xl space-y-3">
+                                    <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                        <i class="fa-solid fa-user-plus text-emerald-600"></i> Input Manual User Baru
+                                    </h4>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Peran / Role</label>
+                                        <select id="addUserRole" onchange="EduGuard.toggleUserFormRole(this.value)" class="w-full px-3 py-2 border rounded-lg text-xs bg-white">
+                                            <option value="student">Murid (Siswa)</option>
+                                            <option value="teacher">Guru Pengampu</option>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label id="lblUserId" class="block text-[11px] font-bold text-slate-700 mb-1">NIS Siswa</label>
+                                        <input type="text" id="addUserId" placeholder="Cth: 1004" class="w-full px-3 py-2 border rounded-lg text-xs bg-white">
+                                    </div>
+                                    <div>
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Nama Lengkap</label>
+                                        <input type="text" id="addUserName" placeholder="Cth: Dewi Lestari" class="w-full px-3 py-2 border rounded-lg text-xs bg-white">
+                                    </div>
+                                    <div id="divUserClass">
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Kelas</label>
+                                        <input type="text" id="addUserClass" placeholder="Cth: XII MIPA 2" class="w-full px-3 py-2 border rounded-lg text-xs bg-white">
+                                    </div>
+                                    <div id="divUserSubject" class="hidden">
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Mata Pelajaran Pengampu</label>
+                                        <input type="text" id="addUserSubject" placeholder="Cth: Fisika" class="w-full px-3 py-2 border rounded-lg text-xs bg-white">
+                                    </div>
+                                    <button onclick="EduGuard.saveManualUser()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 rounded-lg text-xs transition shadow-sm">
+                                        <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan User Ke System
+                                    </button>
+                                </div>
+
+                                <!-- IMPORT FILE EXCEL / CSV -->
+                                <div class="bg-slate-50 border p-4 rounded-xl space-y-3 flex flex-col justify-between">
+                                    <div>
+                                        <div class="flex justify-between items-center mb-2">
+                                            <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Import Data dari File Excel (.xlsx / .csv)
+                                            </h4>
+                                            <button onclick="EduGuard.downloadUserExcelTemplate()" class="text-emerald-700 text-[11px] font-bold underline">
+                                                <i class="fa-solid fa-download mr-1"></i> Unduh Template
+                                            </button>
+                                        </div>
+                                        <p class="text-[11px] text-slate-500 mb-3">Upload file Excel dengan kolom: <strong>ROLE, ID_NIS_NIP, NAME, CLASS, SUBJECT</strong>.</p>
+                                        
+                                        <div class="border-2 border-dashed border-emerald-300 rounded-xl p-4 text-center bg-white">
+                                            <input type="file" id="userExcelFileInput" accept=".xlsx, .xls, .csv" onchange="EduGuard.handleUserExcelUpload(event)" class="hidden">
+                                            <label for="userExcelFileInput" class="cursor-pointer bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-sm inline-block">
+                                                <i class="fa-solid fa-folder-open mr-1"></i> Pilih File Excel (.xlsx / .csv)
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div class="pt-2 border-t">
+                                        <label class="block text-[11px] font-bold text-slate-700 mb-1">Atau Tempel (Paste) Teks Format Excel CSV:</label>
+                                        <textarea id="userCsvPasteArea" rows="3" placeholder="student,1005,Eka Putra,XII IPS 1,&#10;teacher,19890101,Bambang S.Pd,-,Fisika" class="w-full p-2 border rounded-lg text-[11px] font-mono bg-white"></textarea>
+                                        <button onclick="EduGuard.parseAndImportUserCsv(document.getElementById('userCsvPasteArea').value)" class="mt-1.5 w-full bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 rounded-lg text-xs">
+                                            Proses Impor Teks CSV
+                                        </button>
+                                    </div>
+                                </div>
+
+                            </div>
+
+                            <!-- TABEL DAFTAR SEMUA USER -->
+                            <div class="space-y-3">
+                                <div class="flex justify-between items-center">
+                                    <h4 class="font-bold text-slate-800 text-sm">Daftar Guru & Murid Terdaftar</h4>
+                                    <div class="flex gap-2">
+                                        <select onchange="EduGuard.filterUserTableRole(this.value)" class="px-2.5 py-1.5 border rounded-lg text-xs bg-white font-medium">
+                                            <option value="all">Semua Peran</option>
+                                            <option value="student">Hanya Murid</option>
+                                            <option value="teacher">Hanya Guru</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="overflow-x-auto border rounded-xl">
+                                    <table class="w-full text-left border-collapse text-xs">
+                                        <thead class="bg-slate-100 border-b text-slate-700 font-bold">
+                                            <tr>
+                                                <th class="p-3">Peran</th>
+                                                <th class="p-3">ID / NIS / NIP</th>
+                                                <th class="p-3">Nama Lengkap</th>
+                                                <th class="p-3">Kelas / Mapel</th>
+                                                <th class="p-3">Status Device</th>
+                                                <th class="p-3">Aksi</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="tblUsersBody" class="divide-y text-slate-600">
+                                            ${this.renderUserTableRows('all')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    `;
                 } else if (tab === 'users') {
                     return `
                         <div class="space-y-4">
@@ -1451,6 +1574,199 @@
                         </div>
                     `;
                 }
+            },
+
+            toggleUserFormRole(role) {
+                const lbl = document.getElementById('lblUserId');
+                const divClass = document.getElementById('divUserClass');
+                const divSub = document.getElementById('divUserSubject');
+
+                if (role === 'teacher') {
+                    lbl.innerText = 'NIP Guru';
+                    divClass.classList.add('hidden');
+                    divSub.classList.remove('hidden');
+                } else {
+                    lbl.innerText = 'NIS Siswa';
+                    divClass.classList.remove('hidden');
+                    divSub.classList.add('hidden');
+                }
+            },
+
+            async saveManualUser() {
+                const role = document.getElementById('addUserRole').value;
+                const id = document.getElementById('addUserId').value.trim();
+                const name = document.getElementById('addUserName').value.trim();
+                const cls = document.getElementById('addUserClass').value.trim();
+                const sub = document.getElementById('addUserSubject').value.trim();
+
+                if (!id || !name) return this.showToast('ID / NIS / NIP dan Nama wajib diisi!', 'warning');
+
+                const payload = { role, id, name, class: cls, subjectName: sub };
+
+                if (role === 'student') {
+                    DB.students.push({ nis: id, name: name, class: cls || 'XII', deviceId: null });
+                } else {
+                    DB.teachers.push({ nip: id, name: name, subject: sub || 'Mapel', subjectId: 'SUB-' + id });
+                    if (sub) {
+                        DB.subjects.push({ id: 'SUB-' + id, name: sub, teacherNip: id, token: 'TOK' + Math.floor(100+Math.random()*900), durationMin: 90, finalizedPackages: [], publishedPackages: [] });
+                    }
+                }
+
+                await apiCall('addUser', payload);
+                this.showToast(`User ${name} berhasil disimpan!`, 'success');
+                this.renderAdminDashboard();
+            },
+
+            downloadUserExcelTemplate() {
+                const csvContent = "ROLE,ID_NIS_NIP,NAME,CLASS,SUBJECT\nstudent,1004,Dewi Lestari,XII MIPA 2,\nteacher,19890101,Bambang S.Pd,-,Fisika";
+                const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'Template_Import_User_EduGuard.csv';
+                a.click();
+            },
+
+            handleUserExcelUpload(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const data = new Uint8Array(evt.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const json = XLSX.utils.sheet_to_json(worksheet);
+
+                    const usersToImport = [];
+                    json.forEach(row => {
+                        const role = (row.ROLE || row.role || 'student').toLowerCase();
+                        const id = String(row.ID_NIS_NIP || row.NIS || row.NIP || row.id || '').trim();
+                        const name = row.NAME || row.name || row.Nama || '';
+                        const cls = row.CLASS || row.class || row.Kelas || '-';
+                        const sub = row.SUBJECT || row.subject || row.Mapel || '';
+
+                        if (id && name) {
+                            usersToImport.push({ role, id, name, class: cls, subjectName: sub });
+                        }
+                    });
+
+                    if (usersToImport.length > 0) {
+                        this.batchImportUsers(usersToImport);
+                    } else {
+                        this.showToast('Tidak ada data user valid yang terbaca dari Excel!', 'error');
+                    }
+                };
+                reader.readAsArrayBuffer(file);
+            },
+
+            parseAndImportUserCsv(rawText) {
+                if (!rawText.trim()) return this.showToast('Teks CSV kosong!', 'warning');
+                const lines = rawText.split('\n');
+                const usersToImport = [];
+
+                lines.forEach(line => {
+                    const parts = line.split(',');
+                    if (parts.length >= 3) {
+                        const role = parts[0].trim().toLowerCase();
+                        const id = parts[1].trim();
+                        const name = parts[2].trim();
+                        const cls = parts[3] ? parts[3].trim() : '-';
+                        const sub = parts[4] ? parts[4].trim() : '';
+
+                        if (id && name) {
+                            usersToImport.push({ role, id, name, class: cls, subjectName: sub });
+                        }
+                    }
+                });
+
+                if (usersToImport.length > 0) {
+                    this.batchImportUsers(usersToImport);
+                } else {
+                    this.showToast('Format CSV tidak sesuai!', 'error');
+                }
+            },
+
+            async batchImportUsers(usersList) {
+                usersList.forEach(u => {
+                    if (u.role === 'student') {
+                        if (!DB.students.some(s => s.nis === u.id)) {
+                            DB.students.push({ nis: u.id, name: u.name, class: u.class, deviceId: null });
+                        }
+                    } else if (u.role === 'teacher') {
+                        if (!DB.teachers.some(t => t.nip === u.id)) {
+                            DB.teachers.push({ nip: u.id, name: u.name, subject: u.subjectName || 'Mapel', subjectId: 'SUB-' + u.id });
+                            if (u.subjectName) {
+                                DB.subjects.push({ id: 'SUB-' + u.id, name: u.subjectName, teacherNip: u.id, token: 'TOK' + Math.floor(100+Math.random()*900), durationMin: 90, finalizedPackages: [], publishedPackages: [] });
+                            }
+                        }
+                    }
+                });
+
+                await apiCall('importUsersBatch', { users: usersList });
+                this.showToast(`Berhasil mengimpor ${usersList.length} user ke sistem!`, 'success');
+                this.renderAdminDashboard();
+            },
+
+            renderUserTableRows(filterRole = 'all') {
+                const rows = [];
+
+                if (filterRole === 'all' || filterRole === 'teacher') {
+                    DB.teachers.forEach(t => {
+                        rows.push(`
+                            <tr>
+                                <td class="p-3"><span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded font-bold text-[10px]">GURU</span></td>
+                                <td class="p-3 font-bold">${t.nip}</td>
+                                <td class="p-3">${t.name}</td>
+                                <td class="p-3">${t.subject || 'Mapel'}</td>
+                                <td class="p-3"><span class="text-slate-400">-</span></td>
+                                <td class="p-3">
+                                    <button onclick="EduGuard.deleteUser('${t.nip}', 'teacher')" class="text-red-600 hover:text-red-800 font-bold text-xs">
+                                        <i class="fa-solid fa-trash"></i> Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                if (filterRole === 'all' || filterRole === 'student') {
+                    DB.students.forEach(st => {
+                        rows.push(`
+                            <tr>
+                                <td class="p-3"><span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold text-[10px]">MURID</span></td>
+                                <td class="p-3 font-bold">${st.nis}</td>
+                                <td class="p-3">${st.name}</td>
+                                <td class="p-3">${st.class || 'XII'}</td>
+                                <td class="p-3 font-mono">${st.deviceId ? `<span class="bg-purple-100 text-purple-800 px-2 py-0.5 rounded text-[10px]">${st.deviceId}</span>` : '<span class="text-slate-400">Belum Terikat</span>'}</td>
+                                <td class="p-3">
+                                    <button onclick="EduGuard.deleteUser('${st.nis}', 'student')" class="text-red-600 hover:text-red-800 font-bold text-xs">
+                                        <i class="fa-solid fa-trash"></i> Hapus
+                                    </button>
+                                </td>
+                            </tr>
+                        `);
+                    });
+                }
+
+                return rows.join('');
+            },
+
+            filterUserTableRole(role) {
+                document.getElementById('tblUsersBody').innerHTML = this.renderUserTableRows(role);
+            },
+
+            async deleteUser(id, role) {
+                if (role === 'student') {
+                    DB.students = DB.students.filter(s => s.nis !== id);
+                } else {
+                    DB.teachers = DB.teachers.filter(t => t.nip !== id);
+                }
+
+                await apiCall('deleteUser', { id: id });
+                this.showToast(`User ${id} telah dihapus.`, 'info');
+                this.renderAdminDashboard();
             },
 
             async toggleAdminPublish(subId, pkg) {
