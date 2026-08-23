@@ -12,7 +12,7 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.6.0/mammoth.browser.min.js"></script>
     <!-- PDF.js for PDF extraction -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.min.js"></script>
-    <!-- SheetJS (XLSX) for Excel import and processing -->
+    <!-- SheetJS (XLSX) for Excel import and export processing -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <script>
         pdfjsLib.GlobalWorkerOptions.workerSrc = 'https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.16.105/pdf.worker.min.js';
@@ -86,7 +86,7 @@
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
             <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <!-- LOGO RESMI SMAN 1 KUTOWINANGUN (5 x 5 cm / ~50px) -->
+                    <!-- LOGO RESMI SMAN 1 KUTOWINANGUN (5 x 5 cm / 50px) -->
                     <img src="https://lh3.googleusercontent.com/d/146YuridIPzE7wTiCCWIoeeM8-yGWMeVK" alt="Logo SMAN 1 Kutowinangun" class="w-[50px] h-[50px] object-contain rounded-lg shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/50x50/2563eb/ffffff?text=CBT';">
                     <div>
                         <h1 class="font-extrabold text-slate-800 text-sm sm:text-base leading-snug">CBT SMA NEGERI 1 KUTOWINANGUN</h1>
@@ -118,8 +118,8 @@
     </div>
 
     <script>
-        // SINKRONISASI GOOGLE APPS SCRIPT API URL (TEMPATKAN WEB APP URL ANDA DI SINI):
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyzEyH8yanbEZHel3vcM0NSlsGkhXcrgkekFQqNeABQ5q0daIcLJ0z7avILGqnoF5Ur/exec";
+        // SINKRONISASI GOOGLE APPS SCRIPT API URL:
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzVHgfovvrco4sle9U_4s0i34Xy-Il4sXOtM4NpDCF3NcMcNSxMlcVvAhBjW8e5WG1g/exec";
 
         const DB = {
             admin: { id: "ADMIN01", name: "Administrator Utama", role: "admin" },
@@ -183,7 +183,8 @@
                 { timestamp: "10:15:20", nis: "1002", name: "Bella Safira", subject: "Informatika / TIK", violationType: "Keluar Aplikasi / Switch Tab", count: 1, status: "Teguran" }
             ],
             results: [
-                { rowIdx: 2, nis: "1001", name: "Andi Pratama", class: "XII MIPA 1", subject: "Informatika / TIK", package: "A", scorePG: 80, scoreEssay: 15, totalScore: 95, status: "Selesai", submittedAt: "09:45:00" }
+                { rowIdx: 2, nis: "1001", name: "Andi Pratama", class: "XII MIPA 1", subject: "Informatika / TIK", package: "A", scorePG: 80, scoreEssay: 15, totalScore: 95, status: "Selesai", submittedAt: "09:45:00" },
+                { rowIdx: 3, nis: "1002", name: "Bella Safira", class: "XII MIPA 1", subject: "Informatika / TIK", package: "A", scorePG: 70, scoreEssay: null, totalScore: 70, status: "Selesai", submittedAt: "09:50:00" }
             ]
         };
 
@@ -230,7 +231,6 @@
                 this.renderLoginView();
             },
 
-            // Sinkronisasi otomatis agar semua guru dan mapel baru selalu terintegrasi dengan daftar mata pelajaran
             ensureSubjectsUpToDate() {
                 DB.teachers.forEach(tc => {
                     if (tc.subject && tc.subject !== '-' && tc.subject !== 'Mapel') {
@@ -386,14 +386,14 @@
                                 </button>
                             </div>
 
-                           <!-- <div class="mt-8 border-t border-slate-200 pt-5">
+                            <div class="mt-8 border-t border-slate-200 pt-5">
                                 <span class="text-[11px] font-bold text-slate-400 uppercase tracking-wider block mb-2 text-center">Akun Demo Cepat:</span>
                                 <div class="grid grid-cols-3 gap-2 text-[11px]">
                                     <button onclick="EduGuard.quickLogin('student', '1001')" class="bg-blue-50 text-blue-700 p-2 rounded-lg font-bold border border-blue-200 hover:bg-blue-100 transition">NIS: 1001</button>
                                     <button onclick="EduGuard.quickLogin('teacher', '19900303')" class="bg-purple-50 text-purple-700 p-2 rounded-lg font-bold border border-purple-200 hover:bg-purple-100 transition">NIP: 19900303</button>
                                     <button onclick="EduGuard.quickLogin('admin', 'ADMIN01')" class="bg-emerald-50 text-emerald-700 p-2 rounded-lg font-bold border border-emerald-200 hover:bg-emerald-100 transition">ID: ADMIN01</button>
                                 </div>
-                            </div> -->
+                            </div>
                         </div>
                     </div>
                 `;
@@ -578,7 +578,6 @@
                     return this.showToast('Ujian mata pelajaran ini belum diterbitkan!', 'warning');
                 }
 
-                // Cocokkan token dengan token paket spesifik atau token umum mapel
                 let targetPkg = null;
                 if (subject.packageTokens) {
                     for (let p of publishedPkgs) {
@@ -687,33 +686,53 @@
                         `;
                     }).join('');
                 } else if (q.type === 'URUTAN') {
-                    const items = userAns || q.items || [];
+                    if (!this.userAnswers[qIdx]) {
+                        this.userAnswers[qIdx] = [...(q.items || q.options || [])];
+                    }
+                    const items = this.userAnswers[qIdx];
                     return `
-                        <p class="text-[11px] text-slate-500 mb-2">Urutan Tepat Pertanyaan:</p>
+                        <p class="text-[11px] text-slate-500 mb-2">Gunakan tombol <i class="fa-solid fa-arrow-up text-brand-600"></i> dan <i class="fa-solid fa-arrow-down text-brand-600"></i> untuk mengurutkan dengan tepat:</p>
                         <div class="space-y-1">
                             ${items.map((it, idx) => `
-                                <div class="p-2.5 bg-white border rounded-lg text-xs font-semibold text-slate-700 flex justify-between items-center">
-                                    <span>${idx + 1}. ${it}</span>
-                                    <span class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded">Urutan ${idx + 1}</span>
+                                <div class="p-2.5 bg-white border rounded-xl text-xs font-semibold text-slate-700 flex justify-between items-center shadow-sm">
+                                    <span><strong>${idx + 1}.</strong> ${it}</span>
+                                    <div class="flex items-center gap-1">
+                                        <button onclick="EduGuard.moveUrutanItem(${qIdx}, ${idx}, -1)" ${idx === 0 ? 'disabled' : ''} class="w-7 h-7 bg-slate-100 hover:bg-brand-100 rounded-lg flex items-center justify-center disabled:opacity-30">
+                                            <i class="fa-solid fa-arrow-up text-slate-600"></i>
+                                        </button>
+                                        <button onclick="EduGuard.moveUrutanItem(${qIdx}, ${idx}, 1)" ${idx === items.length - 1 ? 'disabled' : ''} class="w-7 h-7 bg-slate-100 hover:bg-brand-100 rounded-lg flex items-center justify-center disabled:opacity-30">
+                                            <i class="fa-solid fa-arrow-down text-slate-600"></i>
+                                        </button>
+                                    </div>
                                 </div>
                             `).join('')}
                         </div>
                     `;
                 } else if (q.type === 'JODOH') {
                     const pairs = q.pairs || [];
-                    return pairs.map((pair, pIdx) => `
-                        <div class="flex items-center gap-2 mb-2 bg-white p-2 border rounded-xl">
-                            <span class="w-1/2 p-2 bg-slate-100 rounded text-xs font-semibold">${pair.left}</span>
-                            <i class="fa-solid fa-arrow-right text-slate-400"></i>
-                            <span class="w-1/2 p-2 bg-slate-100 rounded text-xs font-semibold">${pair.right}</span>
+                    if (!this.userAnswers[qIdx]) {
+                        this.userAnswers[qIdx] = pairs.map(p => ({ left: p.left, userRight: '' }));
+                    }
+                    const userPairs = this.userAnswers[qIdx];
+                    const rightOptions = Array.from(new Set(pairs.map(p => p.right)));
+
+                    return userPairs.map((p, pIdx) => `
+                        <div class="bg-white p-3 border rounded-xl mb-2 space-y-1">
+                            <span class="text-xs font-bold text-slate-800 block">${pIdx + 1}. ${p.left}</span>
+                            <select onchange="EduGuard.selectJodohPair(${qIdx}, ${pIdx}, this.value)" class="w-full p-2 border rounded-lg text-xs bg-slate-50 focus:outline-none focus:ring-1 focus:ring-brand-500">
+                                <option value="">-- Pilih Pasangan Tepat --</option>
+                                ${rightOptions.map(rOpt => `
+                                    <option value="${rOpt}" ${p.userRight === rOpt ? 'selected' : ''}>${rOpt}</option>
+                                `).join('')}
+                            </select>
                         </div>
                     `).join('');
                 } else if (q.type === 'ESSAY') {
                     return `
-                        <textarea oninput="EduGuard.saveEssayAnswer(${qIdx}, this.value)" rows="4" placeholder="Ketik jawaban Anda di sini..." class="w-full p-3 border rounded-xl text-xs bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none">${userAns || ''}</textarea>
+                        <textarea oninput="EduGuard.saveEssayAnswer(${qIdx}, this.value)" rows="5" placeholder="Ketik jawaban uraian lengkap Anda di sini..." class="w-full p-3 border rounded-xl text-xs bg-white focus:ring-2 focus:ring-brand-500 focus:outline-none shadow-inner">${userAns || ''}</textarea>
                     `;
                 } else {
-                    return `<p class="text-xs text-slate-500 italic">Pilihan jawaban disesuaikan dengan jenis soal ${q.type}</p>`;
+                    return `<p class="text-xs text-slate-500 italic">Tipe soal tidak terdefinisi.</p>`;
                 }
             },
 
@@ -729,6 +748,23 @@
                 else arr.push(optIdx);
                 this.userAnswers[qIdx] = arr;
                 this.renderExamInterface();
+            },
+
+            moveUrutanItem(qIdx, itemIdx, direction) {
+                const arr = [...this.userAnswers[qIdx]];
+                const targetIdx = itemIdx + direction;
+                if (targetIdx >= 0 && targetIdx < arr.length) {
+                    const temp = arr[itemIdx];
+                    arr[itemIdx] = arr[targetIdx];
+                    arr[targetIdx] = temp;
+                    this.userAnswers[qIdx] = arr;
+                    this.renderExamInterface();
+                }
+            },
+
+            selectJodohPair(qIdx, pairIdx, value) {
+                if (!this.userAnswers[qIdx]) this.userAnswers[qIdx] = [];
+                this.userAnswers[qIdx][pairIdx].userRight = value;
             },
 
             saveEssayAnswer(qIdx, text) {
@@ -802,8 +838,22 @@
                 let totalPGScore = 0;
                 this.activeExam.questions.forEach((q, idx) => {
                     const ans = this.userAnswers[idx];
+                    const weight = q.weight || 20;
+
                     if (q.type === 'PG' && ans === q.correctKey) {
-                        totalPGScore += (q.weight || 20);
+                        totalPGScore += weight;
+                    } else if (q.type === 'PGK' && Array.isArray(ans) && Array.isArray(q.correctKeys)) {
+                        const userSorted = [...ans].sort().join(',');
+                        const correctSorted = [...q.correctKeys].sort().join(',');
+                        if (userSorted === correctSorted) totalPGScore += weight;
+                    } else if (q.type === 'URUTAN' && Array.isArray(ans) && Array.isArray(q.correctOrder)) {
+                        if (JSON.stringify(ans) === JSON.stringify(q.correctOrder)) totalPGScore += weight;
+                    } else if (q.type === 'JODOH' && Array.isArray(ans) && Array.isArray(q.pairs)) {
+                        let correctCount = 0;
+                        q.pairs.forEach((pair, pIdx) => {
+                            if (ans[pIdx] && ans[pIdx].userRight === pair.right) correctCount++;
+                        });
+                        if (correctCount === q.pairs.length) totalPGScore += weight;
                     }
                 });
 
@@ -998,14 +1048,14 @@
             renderTeacherTabContent(tab, subjectId, pkg, questionsList, isFinalized) {
                 if (tab === 'manual') {
                     return `
-                        <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 max-w-2xl space-y-4">
+                        <div class="bg-slate-50 p-4 sm:p-5 rounded-2xl border border-slate-200 max-w-2xl space-y-4">
                             <h4 class="font-bold text-slate-800 text-sm flex items-center gap-2">
                                 <i class="fa-solid fa-circle-plus text-purple-600"></i> Buat Butir Soal Baru (Paket ${pkg})
                             </h4>
                             
                             <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Tipe Soal</label>
-                                <select id="manualType" class="w-full px-3 py-2 border rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-purple-500">
+                                <label class="block text-xs font-bold text-slate-700 mb-1">Tipe Soal (5 Jenis Soal)</label>
+                                <select id="manualType" onchange="EduGuard.updateManualQuestionFormFields(this.value)" class="w-full px-3 py-2.5 border rounded-xl text-xs font-bold text-purple-900 bg-white focus:outline-none focus:ring-2 focus:ring-purple-500 shadow-sm">
                                     <option value="PG">1. Pilihan Ganda A-E (Koreksi Otomatis)</option>
                                     <option value="PGK">2. Pilihan Ganda Kompleks (Koreksi Otomatis)</option>
                                     <option value="URUTAN">3. Mengurutkan (Koreksi Otomatis)</option>
@@ -1016,7 +1066,7 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Pertanyaan / Teks Soal</label>
-                                <textarea id="manualText" rows="3" placeholder="Ketik teks pertanyaan soal di sini..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
+                                <textarea id="manualText" rows="3" placeholder="Ketik pertanyaan soal di sini..." class="w-full px-3 py-2 border rounded-xl text-xs bg-white focus:outline-none focus:ring-2 focus:ring-purple-500"></textarea>
                             </div>
 
                             <div class="grid grid-cols-2 gap-2">
@@ -1030,18 +1080,13 @@
                                 </div>
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Pilihan Ospi / Pasangan / Urutan (Pisahkan Komma / Baris Baru)</label>
-                                <textarea id="manualOptions" rows="3" placeholder="Opsi A&#10;Opsi B&#10;Opsi C" class="w-full px-3 py-2 border rounded-xl text-xs bg-white"></textarea>
+                            <!-- DYNAMIC FORM FIELDS BASED ON QUESTION TYPE -->
+                            <div id="manualFormDynamicContainer" class="p-3 bg-white border border-purple-100 rounded-xl space-y-3">
+                                ${this.getManualFormFieldsHTML('PG')}
                             </div>
 
-                            <div>
-                                <label class="block text-xs font-bold text-slate-700 mb-1">Kunci Jawaban Tepat (Nomor Opsi 0, 1, 2 atau Teks)</label>
-                                <input type="text" id="manualKey" placeholder="Misal: 1 (Opsi B) atau 0,2 untuk PGK" class="w-full px-3 py-2 border rounded-xl text-xs bg-white">
-                            </div>
-
-                            <button onclick="EduGuard.saveManualQuestion()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl text-xs transition active:scale-95 shadow-md">
-                                <i class="fa-solid fa-floppy-disk mr-1"></i> Simpan Soal Ke Paket ${pkg}
+                            <button onclick="EduGuard.saveManualQuestion()" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-bold py-3 rounded-xl text-xs transition active:scale-95 shadow-md flex items-center justify-center gap-1">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Soal Ke Paket ${pkg}
                             </button>
                         </div>
                     `;
@@ -1110,6 +1155,8 @@
                                     </div>
                                     <p class="text-xs font-bold text-slate-800">${idx + 1}. ${q.text}</p>
                                     ${q.options ? `<p class="text-[11px] text-slate-600">Opsi: ${q.options.join(' | ')}</p>` : ''}
+                                    ${q.items ? `<p class="text-[11px] text-slate-600">Items: ${q.items.join(' -> ')}</p>` : ''}
+                                    ${q.pairs ? `<p class="text-[11px] text-slate-600">Pasangan: ${q.pairs.map(p=>`${p.left}=>${p.right}`).join(', ')}</p>` : ''}
                                     <p class="text-[11px] text-emerald-700 font-semibold">Kunci: ${JSON.stringify(q.correctKey !== undefined ? q.correctKey : (q.correctKeys || q.correctOrder || q.pairs))}</p>
                                 </div>
                             `).join('')}
@@ -1129,32 +1176,61 @@
                         </div>
                     `;
                 } else if (tab === 'results') {
+                    const activeSubjectObj = DB.subjects.find(s => s.id === subjectId);
+                    const subjectName = activeSubjectObj ? activeSubjectObj.name : 'Mata Pelajaran';
+                    
+                    // Filter results for teacher's current subject
+                    const filteredResults = DB.results.filter(r => !r.subject || r.subject === subjectName || subjectName.includes(r.subject) || r.subject.includes(subjectName));
+                    const listToDisplay = filteredResults.length > 0 ? filteredResults : DB.results;
+
                     return `
-                        <div class="space-y-3">
-                            <h4 class="font-bold text-slate-800 text-sm">Hasil Jawaban Murid & Koreksi Essay</h4>
-                            <div class="overflow-x-auto border rounded-xl">
+                        <div class="space-y-4">
+                            <!-- HEADER BAR HASIL & DOWNLOAD -->
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-purple-50 border border-purple-200 p-4 rounded-xl">
+                                <div>
+                                    <h4 class="font-bold text-purple-900 text-sm flex items-center gap-2">
+                                        <i class="fa-solid fa-square-poll-vertical text-purple-600"></i> Hasil Jawaban Murid & Koreksi Essay
+                                    </h4>
+                                    <p class="text-xs text-purple-700">Mapel: <strong>${subjectName}</strong> | Input nilai essay siswa pada kolom di bawah dan simpan.</p>
+                                </div>
+                                <button onclick="EduGuard.exportTeacherResultsExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2.5 rounded-xl text-xs font-bold shadow-md transition flex items-center gap-2 active:scale-95 whitespace-nowrap">
+                                    <i class="fa-solid fa-file-excel text-sm"></i> Download Hasil (Excel)
+                                </button>
+                            </div>
+
+                            <div class="overflow-x-auto border rounded-2xl bg-white shadow-sm">
                                 <table class="w-full text-left border-collapse text-xs">
                                     <thead class="bg-slate-100 border-b text-slate-700 font-bold">
                                         <tr>
                                             <th class="p-3">NIS</th>
-                                            <th class="p-3">Nama</th>
+                                            <th class="p-3">Nama Siswa</th>
+                                            <th class="p-3">Kelas</th>
+                                            <th class="p-3">Paket</th>
                                             <th class="p-3">Skor PG</th>
                                             <th class="p-3">Skor Essay</th>
-                                            <th class="p-3">Total</th>
-                                            <th class="p-3">Aksi</th>
+                                            <th class="p-3">Total Skor</th>
+                                            <th class="p-3">Status</th>
+                                            <th class="p-3 text-center">Aksi Input Nilai</th>
                                         </tr>
                                     </thead>
                                     <tbody class="divide-y text-slate-600">
-                                        ${DB.results.map(r => `
-                                            <tr>
-                                                <td class="p-3 font-bold">${r.nis}</td>
-                                                <td class="p-3">${r.name}</td>
-                                                <td class="p-3">${r.scorePG}</td>
-                                                <td class="p-3">${r.scoreEssay !== null ? r.scoreEssay : '<span class="text-amber-600 italic">Belum Dikoreksi</span>'}</td>
-                                                <td class="p-3 font-bold text-purple-700">${r.totalScore}</td>
+                                        ${listToDisplay.map(r => `
+                                            <tr class="hover:bg-slate-50 transition">
+                                                <td class="p-3 font-bold text-slate-800">${r.nis}</td>
+                                                <td class="p-3 font-semibold text-slate-700">${r.name}</td>
+                                                <td class="p-3">${r.class || '-'}</td>
+                                                <td class="p-3"><span class="bg-purple-100 text-purple-800 font-bold px-2 py-0.5 rounded text-[10px]">Paket ${r.package || 'A'}</span></td>
+                                                <td class="p-3 font-bold text-slate-700">${r.scorePG}</td>
                                                 <td class="p-3">
-                                                    <button onclick="EduGuard.gradeEssayTeacher(${r.rowIdx}, 20)" class="bg-purple-600 text-white px-2.5 py-1 rounded text-[10px] font-bold shadow-sm">
-                                                        Koreksi Essay
+                                                    <input type="number" id="essayInput_${r.rowIdx}" value="${r.scoreEssay !== null && r.scoreEssay !== undefined ? r.scoreEssay : ''}" min="0" max="100" placeholder="0-20" class="w-20 px-2.5 py-1 border border-purple-300 rounded-lg text-xs font-bold text-purple-900 bg-purple-50 focus:bg-white focus:ring-2 focus:ring-purple-500 focus:outline-none text-center">
+                                                </td>
+                                                <td class="p-3 font-extrabold text-purple-700 text-sm" id="totalScoreDisplay_${r.rowIdx}">${r.totalScore}</td>
+                                                <td class="p-3">
+                                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold ${r.status.includes('Dibatalkan') ? 'bg-red-100 text-red-700' : 'bg-emerald-100 text-emerald-700'}">${r.status}</span>
+                                                </td>
+                                                <td class="p-3 text-center">
+                                                    <button onclick="EduGuard.saveTeacherEssayGradeFromInput(${r.rowIdx})" class="bg-purple-600 hover:bg-purple-700 text-white px-3 py-1.5 rounded-lg text-[11px] font-bold shadow-sm transition active:scale-95 flex items-center gap-1 mx-auto">
+                                                        <i class="fa-solid fa-floppy-disk"></i> Simpan Nilai
                                                     </button>
                                                 </td>
                                             </tr>
@@ -1197,6 +1273,134 @@
                 }
             },
 
+            async saveTeacherEssayGradeFromInput(rowIdx) {
+                const inputEl = document.getElementById(`essayInput_${rowIdx}`);
+                if (!inputEl) return;
+
+                const scoreVal = inputEl.value.trim();
+                if (scoreVal === '' || isNaN(scoreVal)) {
+                    return this.showToast('Masukkan nilai essay berupa angka!', 'warning');
+                }
+
+                const numericScore = Number(scoreVal);
+                const item = DB.results.find(r => r.rowIdx === rowIdx);
+                if (item) {
+                    item.scoreEssay = numericScore;
+                    item.totalScore = item.scorePG + numericScore;
+
+                    const totalDisplay = document.getElementById(`totalScoreDisplay_${rowIdx}`);
+                    if (totalDisplay) totalDisplay.innerText = item.totalScore;
+
+                    await apiCall('gradeEssay', { rowIdx: rowIdx, essayScore: numericScore });
+                    this.showToast(`Nilai essay ${item.name} berhasil disimpan! Total: ${item.totalScore}`, 'success');
+                }
+            },
+
+            exportTeacherResultsExcel() {
+                const subId = this.teacherSelectedSubject;
+                const subjectObj = DB.subjects.find(s => s.id === subId);
+                const subjectName = subjectObj ? subjectObj.name : 'Mata_Pelajaran';
+
+                const filteredResults = DB.results.filter(r => !r.subject || r.subject === subjectName || subjectName.includes(r.subject) || r.subject.includes(subjectName));
+                const dataList = filteredResults.length > 0 ? filteredResults : DB.results;
+
+                if (dataList.length === 0) {
+                    return this.showToast('Belum ada data hasil ujian untuk diunduh!', 'warning');
+                }
+
+                const excelData = [
+                    ["REKAPITULASI HASIL UJIAN - CBT SMA NEGERI 1 KUTOWINANGUN"],
+                    [`Mata Pelajaran: ${subjectName}`, `Tanggal Unduh: ${new Date().toLocaleDateString()}`],
+                    [],
+                    ["NO", "NIS", "NAMA SISWA", "KELAS", "PAKET", "SKOR PG", "SKOR ESSAY", "TOTAL SKOR", "STATUS", "WAKTU SUBMIT"]
+                ];
+
+                dataList.forEach((r, idx) => {
+                    excelData.push([
+                        idx + 1,
+                        r.nis,
+                        r.name,
+                        r.class || '-',
+                        r.package || 'A',
+                        r.scorePG,
+                        r.scoreEssay !== null && r.scoreEssay !== undefined ? r.scoreEssay : 'Belum Dikoreksi',
+                        r.totalScore,
+                        r.status,
+                        r.submittedAt || '-'
+                    ]);
+                });
+
+                const worksheet = XLSX.utils.aoa_to_sheet(excelData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Hasil Ujian");
+                
+                const filename = `Hasil_Ujian_${subjectName.replace(/[^a-zA-Z0-9]/g, '_')}_SMAN1Kutowinangun.xlsx`;
+                XLSX.writeFile(workbook, filename);
+                this.showToast('File Hasil Ujian berhasil diunduh!', 'success');
+            },
+
+            getManualFormFieldsHTML(type) {
+                if (type === 'PG') {
+                    return `
+                        <p class="text-xs font-bold text-slate-700">Pilihan Opsi A - E & Kunci Jawaban:</p>
+                        ${['A', 'B', 'C', 'D', 'E'].map((lbl, idx) => `
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs w-5">${lbl}.</span>
+                                <input type="text" id="manualOpt_${idx}" placeholder="Teks Opsi ${lbl}" class="flex-1 px-3 py-1.5 border rounded-lg text-xs bg-white">
+                                <label class="flex items-center gap-1 text-[11px] font-bold text-slate-600 cursor-pointer">
+                                    <input type="radio" name="pgCorrectRadio" value="${idx}" ${idx === 0 ? 'checked' : ''}> Kunci
+                                </label>
+                            </div>
+                        `).join('')}
+                    `;
+                } else if (type === 'PGK') {
+                    return `
+                        <p class="text-xs font-bold text-purple-800">Opsi A - E & Centang Semua Kunci yang Benar (Jawaban Jamak):</p>
+                        ${['A', 'B', 'C', 'D', 'E'].map((lbl, idx) => `
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs w-5">${lbl}.</span>
+                                <input type="text" id="manualOpt_${idx}" placeholder="Teks Opsi ${lbl}" class="flex-1 px-3 py-1.5 border rounded-lg text-xs bg-white">
+                                <label class="flex items-center gap-1 text-[11px] font-bold text-purple-700 cursor-pointer">
+                                    <input type="checkbox" id="pgkCheck_${idx}"> Kunci
+                                </label>
+                            </div>
+                        `).join('')}
+                    `;
+                } else if (type === 'URUTAN') {
+                    return `
+                        <p class="text-xs font-bold text-slate-700">Masukkan Butir-Butir dalam URUTAN TEPAT (Awal ke Akhir):</p>
+                        ${[1, 2, 3, 4].map(idx => `
+                            <div class="flex items-center gap-2">
+                                <span class="font-bold text-xs w-12">Urutan ${idx}:</span>
+                                <input type="text" id="manualUrutan_${idx-1}" placeholder="Langkah/Tahap ke-${idx}" class="flex-1 px-3 py-1.5 border rounded-lg text-xs bg-white">
+                            </div>
+                        `).join('')}
+                    `;
+                } else if (type === 'JODOH') {
+                    return `
+                        <p class="text-xs font-bold text-slate-700">Pasangkan Pernyataan (Sisi Kiri) dengan Pasangannya (Sisi Kanan):</p>
+                        ${[1, 2, 3].map(idx => `
+                            <div class="grid grid-cols-2 gap-2">
+                                <input type="text" id="manualJodohLeft_${idx-1}" placeholder="Pernyataan Kiri ${idx}" class="px-3 py-1.5 border rounded-lg text-xs bg-white">
+                                <input type="text" id="manualJodohRight_${idx-1}" placeholder="Pasangan Kanan ${idx}" class="px-3 py-1.5 border rounded-lg text-xs bg-white">
+                            </div>
+                        `).join('')}
+                    `;
+                } else if (type === 'ESSAY') {
+                    return `
+                        <p class="text-xs font-bold text-slate-700">Pedoman Penilaian / Kunci Jawaban Singkat (Untuk Acuan Guru):</p>
+                        <textarea id="manualEssayKey" rows="2" placeholder="Tuliskan kata kunci atau pedoman penskoran essay..." class="w-full px-3 py-2 border rounded-lg text-xs bg-white"></textarea>
+                    `;
+                }
+            },
+
+            updateManualQuestionFormFields(type) {
+                const container = document.getElementById('manualFormDynamicContainer');
+                if (container) {
+                    container.innerHTML = this.getManualFormFieldsHTML(type);
+                }
+            },
+
             saveManualQuestion() {
                 const subId = this.teacherSelectedSubject;
                 const pkg = this.teacherSelectedPkg;
@@ -1204,8 +1408,6 @@
                 const text = document.getElementById('manualText').value.trim();
                 const image = document.getElementById('manualImage').value.trim();
                 const audio = document.getElementById('manualAudio').value.trim();
-                const optionsRaw = document.getElementById('manualOptions').value.trim();
-                const keyRaw = document.getElementById('manualKey').value.trim();
 
                 if (!text) return this.showToast('Teks soal tidak boleh kosong!', 'warning');
 
@@ -1218,14 +1420,52 @@
                     weight: 20
                 };
 
-                if (type === 'PG' || type === 'PGK') {
-                    newQ.options = optionsRaw.split('\n').filter(o => o.trim() !== '');
-                    if (type === 'PG') newQ.correctKey = Number(keyRaw) || 0;
-                    else newQ.correctKeys = keyRaw.split(',').map(n => Number(n.trim()));
+                if (type === 'PG') {
+                    const opts = [];
+                    for (let i = 0; i < 5; i++) {
+                        const val = document.getElementById(`manualOpt_${i}`).value.trim();
+                        if (val) opts.push(val);
+                    }
+                    if (opts.length < 2) return this.showToast('Isi minimal 2 pilihan opsi!', 'warning');
+                    newQ.options = opts;
+
+                    const radios = document.getElementsByName('pgCorrectRadio');
+                    let sel = 0;
+                    for (let r of radios) { if (r.checked) sel = Number(r.value); }
+                    newQ.correctKey = sel;
+                } else if (type === 'PGK') {
+                    const opts = [];
+                    const keys = [];
+                    for (let i = 0; i < 5; i++) {
+                        const val = document.getElementById(`manualOpt_${i}`).value.trim();
+                        if (val) {
+                            opts.push(val);
+                            if (document.getElementById(`pgkCheck_${i}`).checked) keys.push(opts.length - 1);
+                        }
+                    }
+                    if (opts.length < 2) return this.showToast('Isi minimal 2 pilihan opsi!', 'warning');
+                    newQ.options = opts;
+                    newQ.correctKeys = keys;
+                } else if (type === 'URUTAN') {
+                    const items = [];
+                    for (let i = 0; i < 4; i++) {
+                        const val = document.getElementById(`manualUrutan_${i}`).value.trim();
+                        if (val) items.push(val);
+                    }
+                    if (items.length < 2) return this.showToast('Isi minimal 2 urutan!', 'warning');
+                    newQ.items = items;
+                    newQ.correctOrder = [...items];
+                } else if (type === 'JODOH') {
+                    const pairs = [];
+                    for (let i = 0; i < 3; i++) {
+                        const l = document.getElementById(`manualJodohLeft_${i}`).value.trim();
+                        const r = document.getElementById(`manualJodohRight_${i}`).value.trim();
+                        if (l && r) pairs.push({ left: l, right: r });
+                    }
+                    if (pairs.length < 1) return this.showToast('Isi minimal 1 pasangan terikat!', 'warning');
+                    newQ.pairs = pairs;
                 } else if (type === 'ESSAY') {
-                    // essay type
-                } else {
-                    newQ.options = optionsRaw.split('\n');
+                    newQ.correctKey = document.getElementById('manualEssayKey').value.trim();
                 }
 
                 if (!DB.examPackages[subId]) DB.examPackages[subId] = {};
@@ -1455,20 +1695,26 @@
                 const pkg = this.teacherSelectedPkg;
                 const parsed = [];
 
-                const blocks = rawText.split(/\[(PG|PGK|ordering|MACHING|MATCHING|ESSAY)\]/i);
+                const blocks = rawText.split(/\[(PG|PGK|ordering|URUTAN|MACHING|MATCHING|JODOH|ESSAY)\]/i);
                 for (let i = 1; i < blocks.length; i += 2) {
                     const tag = blocks[i].toUpperCase();
                     const content = blocks[i + 1];
                     if (!content) continue;
 
+                    let type = 'PG';
+                    if (tag === 'PGK') type = 'PGK';
+                    else if (tag === 'ORDERING' || tag === 'URUTAN') type = 'URUTAN';
+                    else if (tag.includes('MACH') || tag === 'JODOH') type = 'JODOH';
+                    else if (tag === 'ESSAY') type = 'ESSAY';
+
                     const qObj = {
                         id: 'Q_' + Date.now() + '_' + Math.floor(Math.random() * 100),
-                        type: tag === 'ORDERING' ? 'URUTAN' : (tag.includes('MACH') ? 'JODOH' : tag),
+                        type: type,
                         text: content.split('\n')[0].replace(/^\d+[\.\)]\s*/, '').trim(),
                         weight: 20
                     };
 
-                    if (tag === 'PG' || tag === 'PGK') {
+                    if (type === 'PG' || type === 'PGK') {
                         const options = [];
                         const matches = content.match(/[A-E]\.\s*[^\n]+/g);
                         if (matches) matches.forEach(m => options.push(m.replace(/^[A-E]\.\s*/, '').trim()));
@@ -1477,11 +1723,15 @@
                         const keyMatch = content.match(/\[Kunci\s*:\s*([^\]]+)\]/i);
                         if (keyMatch) {
                             const kVal = keyMatch[1].trim();
-                            if (tag === 'PG') qObj.correctKey = kVal.charCodeAt(0) - 65;
+                            if (type === 'PG') qObj.correctKey = kVal.charCodeAt(0) - 65;
                             else qObj.correctKeys = kVal.split(',').map(c => c.trim().charCodeAt(0) - 65);
                         } else {
                             qObj.correctKey = 0;
                         }
+                    } else if (type === 'URUTAN') {
+                        const items = content.split('\n').slice(1).map(l => l.replace(/^\d+[\.\)]\s*/, '').trim()).filter(l => l !== '');
+                        qObj.items = items;
+                        qObj.correctOrder = [...items];
                     }
 
                     parsed.push(qObj);
@@ -1537,17 +1787,6 @@
                 this.showModal('Template Import Soal (.XLSX / .DOCX / .PDF)', body, `<button onclick="EduGuard.closeModal()" class="bg-slate-800 text-white px-4 py-2 rounded text-xs">Tutup</button>`);
             },
 
-            gradeEssayTeacher(rowIdx, score) {
-                const item = DB.results.find(r => r.rowIdx === rowIdx);
-                if (item) {
-                    item.scoreEssay = score;
-                    item.totalScore = item.scorePG + score;
-                    apiCall('gradeEssay', { rowIdx: rowIdx, essayScore: score });
-                    this.showToast('Nilai Essay berhasil diperbarui!', 'success');
-                    this.renderTeacherDashboard();
-                }
-            },
-
             renderAdminDashboard() {
                 const body = document.getElementById('appBody');
                 this.ensureSubjectsUpToDate();
@@ -1600,7 +1839,6 @@
 
             renderAdminTabContent(tab) {
                 if (tab === 'publication') {
-                    // Pastikan daftar mapel dan guru baru selalu sinkron dan terupdate
                     this.ensureSubjectsUpToDate();
                     return `
                         <div class="space-y-4">
@@ -2151,7 +2389,7 @@
                 const url = window.URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = 'Rekap_Hasil_Ujian_EduGuard.csv';
+                a.download = 'Rekap_Hasil_Ujian_CBT.csv';
                 a.click();
             },
 
