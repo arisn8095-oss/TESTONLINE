@@ -86,7 +86,7 @@
         <header class="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm no-print">
             <div class="max-w-7xl mx-auto px-4 py-3 flex items-center justify-between">
                 <div class="flex items-center gap-3">
-                    <!-- LOGO RESMI SMAN 1 KUTOWINANGUN (5 x 5 cm / 50px) -->
+                    <!-- LOGO RESMI SMAN 1 KUTOWINANGUN -->
                     <img src="https://lh3.googleusercontent.com/d/146YuridIPzE7wTiCCWIoeeM8-yGWMeVK" alt="Logo SMAN 1 Kutowinangun" class="w-[50px] h-[50px] object-contain rounded-lg shadow-sm" onerror="this.onerror=null; this.src='https://placehold.co/50x50/2563eb/ffffff?text=CBT';">
                     <div>
                         <h1 class="font-extrabold text-slate-800 text-sm sm:text-base leading-snug">CBT SMA NEGERI 1 KUTOWINANGUN</h1>
@@ -119,9 +119,9 @@
 
     <script>
         // SINKRONISASI GOOGLE APPS SCRIPT API URL:
-        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbwteIB8xa-eF48UG0mBju_xeEcNlrxPCiYZkblYeGuGSvCxkgE-Fa_K3seSA8yQbOsR/exec";
+        const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbzT-l4hs3zGhEVktxcV4G21VltTiG5HRTIMbY80rNkMXupeycc05pZQgGElJ0eNiCfB/exec";
 
-        // LOCAL MEMORY STATE (Clean state initialized with Admin)
+        // LOCAL MEMORY STATE
         const DB = {
             admin: { id: "ADMIN01", name: "Administrator Utama", role: "admin" },
             teachers: [],
@@ -130,7 +130,7 @@
             examPackages: {},
             cheatLogs: [],
             results: [],
-            studentAnswersMap: {} // Map lokal penampung rincian jawaban murid
+            studentAnswersMap: {}
         };
 
         async function apiCall(action, payload = {}) {
@@ -162,12 +162,12 @@
             deviceFingerprint: null,
             
             // Teacher Dashboard State
-            teacherActiveTab: 'manual', // 'manual', 'import', 'review', 'finalize', 'results', 'cheat'
+            teacherActiveTab: 'manual', 
             teacherSelectedSubject: 'SUB-INF',
             teacherSelectedPkg: 'A',
 
             // Admin Dashboard State
-            adminActiveTab: 'publication', // 'publication', 'cheat', 'results', 'users_data', 'users'
+            adminActiveTab: 'publication',
 
             init() {
                 this.generateDeviceFingerprint();
@@ -232,7 +232,6 @@
             },
 
             setupSecurityListeners() {
-                // Security restrictions execute ONLY AFTER exam starts (when this.activeExam is active)
                 document.addEventListener('contextmenu', e => { if (this.activeExam) e.preventDefault(); });
                 document.addEventListener('copy', e => { if (this.activeExam) e.preventDefault(); });
                 document.addEventListener('paste', e => { if (this.activeExam) e.preventDefault(); });
@@ -467,7 +466,6 @@
                 
                 body.innerHTML = `
                     <div class="mobile-shell rounded-2xl p-5 border border-slate-200 bg-white shadow-lg my-2">
-                        <!-- DASBOR IDENTITAS SISWA -->
                         <div class="bg-gradient-to-r from-brand-600 to-blue-600 rounded-xl p-4 text-white mb-5 shadow-md">
                             <span class="text-xs text-blue-200 uppercase font-semibold">Dashboard Murid</span>
                             <h3 class="text-lg font-bold mt-0.5">${this.currentUser.name}</h3>
@@ -865,7 +863,6 @@
                     userAnswers: this.userAnswers
                 };
 
-                // Simpan Jawaban Lokal Sebagai Fallback
                 if (!DB.studentAnswersMap) DB.studentAnswersMap = {};
                 DB.studentAnswersMap[`${this.currentUser.nis}_${this.activeExam.subjectName}`] = this.userAnswers;
 
@@ -921,7 +918,6 @@
                 body.innerHTML = `
                     <div class="bg-white border border-slate-200 rounded-2xl p-4 sm:p-6 shadow-sm space-y-5">
                         
-                        <!-- Header Dashboard Guru -->
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
                             <div>
                                 <h2 class="text-xl font-extrabold text-slate-800 flex items-center gap-2">
@@ -930,7 +926,6 @@
                                 <p class="text-xs text-slate-500 mt-0.5">${tc.name} | NIP: ${tc.nip}</p>
                             </div>
                             
-                            <!-- Selector Mapel & Paket Soal -->
                             <div class="flex items-center gap-2">
                                 <div class="px-3.5 py-2 border border-purple-200 rounded-xl text-xs font-bold text-purple-900 bg-purple-50 flex items-center gap-2 shadow-sm">
                                     <i class="fa-solid fa-book-bookmark text-purple-600"></i>
@@ -993,7 +988,6 @@
                             </button>
                         </div>
 
-                        <!-- TAB CONTENT AREA -->
                         <div id="teacherTabContent" class="pt-2">
                             ${this.renderTeacherTabContent(activeTab, activeSub, activePkg, questionsList, isFinalized)}
                         </div>
@@ -1080,7 +1074,6 @@
                                 </div>
                             </div>
 
-                            <!-- DYNAMIC FORM FIELDS BASED ON QUESTION TYPE -->
                             <div id="manualFormDynamicContainer" class="p-3 bg-white border border-purple-100 rounded-xl space-y-3">
                                 ${this.getManualFormFieldsHTML('PG')}
                             </div>
@@ -1096,14 +1089,14 @@
                             <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                                 <div>
                                     <h4 class="font-bold text-blue-900 text-sm">Template Impor Soal (.DOCX / .PDF / .XLSX)</h4>
-                                    <p class="text-xs text-blue-700">Dukungan 5 jenis soal (PG, PGK, Urutan, Jodoh, Essay) via Excel (.xlsx) atau Dokumen (.docx/.pdf).</p>
+                                    <p class="text-xs text-blue-700">Format PDF/DOCX resmi ([PG], [PGK], [SORTING], [MATCHING], [ESSAY]) & Excel (.xlsx).</p>
                                 </div>
                                 <div class="flex gap-2">
                                     <button onclick="EduGuard.downloadQuestionExcelTemplate()" class="bg-emerald-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-emerald-700 shadow-sm flex items-center gap-1">
                                         <i class="fa-solid fa-file-excel"></i> Template Excel (.xlsx)
                                     </button>
                                     <button onclick="EduGuard.showTemplateModal()" class="bg-blue-600 text-white px-3 py-2 rounded-lg text-xs font-bold hover:bg-blue-700 flex items-center gap-1">
-                                        <i class="fa-solid fa-eye"></i> Format Tag
+                                        <i class="fa-solid fa-eye"></i> Format Tag DOCX/PDF
                                     </button>
                                 </div>
                             </div>
@@ -1120,7 +1113,7 @@
 
                             <div>
                                 <label class="block text-xs font-bold text-slate-700 mb-1">Atau Tempel (Paste) Teks Template Langsung di Sini:</label>
-                                <textarea id="textPasteImport" rows="6" placeholder="[PG]&#10;1. Shortcut Ctrl + C digunakan untuk ....&#10;A. Memindahkan data&#10;B. Menyalin data&#10;[Kunci: B]" class="w-full px-3 py-2 border rounded-xl text-xs bg-white font-mono"></textarea>
+                                <textarea id="textPasteImport" rows="6" placeholder="[PG]&#10;@Komponen komputer yang bertugas melakukan perhitungan...&#10;#A. RAM&#10;#B. CPU&#10;[Kunci: B]" class="w-full px-3 py-2 border rounded-xl text-xs bg-white font-mono"></textarea>
                                 <button onclick="EduGuard.parseAndImportText(document.getElementById('textPasteImport').value)" class="mt-2 bg-slate-800 hover:bg-slate-900 text-white font-bold px-4 py-2 rounded-lg text-xs shadow-md">
                                     <i class="fa-solid fa-wand-magic-sparkles mr-1"></i> Proses Ekstraksi Teks
                                 </button>
@@ -1289,19 +1282,16 @@
                 this.showToast('Memuat lembar jawaban siswa...', 'info');
 
                 let answersMap = {};
-                // Coba ambil dari Database Spreadsheet via API
                 const remoteAnswers = await apiCall('getStudentAnswers', { nis: nis, subject: subjectName });
                 if (remoteAnswers && remoteAnswers.status === 'success' && Array.isArray(remoteAnswers.data)) {
                     const found = remoteAnswers.data.find(a => String(a.nis) === String(nis));
                     if (found && found.userAnswers) answersMap = found.userAnswers;
                 }
 
-                // Fallback ke penyimpanan lokal jika offline/baru dikirim
                 if (Object.keys(answersMap).length === 0 && DB.studentAnswersMap && DB.studentAnswersMap[`${nis}_${subjectName}`]) {
                     answersMap = DB.studentAnswersMap[`${nis}_${subjectName}`];
                 }
 
-                // Ambil daftar soal
                 const subObj = DB.subjects.find(s => s.name === subjectName || s.id === this.teacherSelectedSubject);
                 const subId = subObj ? subObj.id : this.teacherSelectedSubject;
 
@@ -1339,13 +1329,11 @@
                                     </div>
                                     <p class="text-xs font-semibold text-slate-800">${q.text}</p>
                                     
-                                    <!-- JAWABAN SISWA -->
                                     <div class="bg-white p-3 rounded-lg border">
                                         <span class="text-[10px] font-bold text-slate-400 uppercase block mb-1">Jawaban Siswa:</span>
                                         ${this.renderStudentAnswerValueDetailHTML(q, userAns)}
                                     </div>
 
-                                    <!-- KUNCI / ACUAN GURU -->
                                     <div class="bg-emerald-50/60 p-2.5 rounded-lg border border-emerald-100 text-[11px] text-emerald-900">
                                         <span class="font-bold text-emerald-700 block text-[10px] uppercase">Kunci / Pedoman Guru:</span>
                                         ${q.type === 'PG' && q.options ? `Kunci: <strong>${String.fromCharCode(65 + q.correctKey)}. ${q.options[q.correctKey] || ''}</strong>` : ''}
@@ -1358,7 +1346,6 @@
                             `;
                         }).join('')}
 
-                        <!-- FORM KOREKSI ESSAY -->
                         <div class="bg-purple-100/70 p-4 rounded-xl border border-purple-300 space-y-2 mt-4">
                             <label class="block font-bold text-xs text-purple-900">Input / Perbarui Nilai Essay Siswa Ini (0 - 100):</label>
                             <div class="flex gap-2">
@@ -1772,7 +1759,7 @@
                     if (['PG', 'PGK', 'URUTAN', 'JODOH', 'ESSAY'].includes(typeRaw)) {
                         type = typeRaw;
                     } else if (typeRaw.includes('KOMPLEKS')) type = 'PGK';
-                    else if (typeRaw.includes('URUT')) type = 'URUTAN';
+                    else if (typeRaw.includes('URUT') || typeRaw.includes('SORTING')) type = 'URUTAN';
                     else if (typeRaw.includes('JODOH') || typeRaw.includes('MATCH')) type = 'JODOH';
                     else if (typeRaw.includes('ESSAY') || typeRaw.includes('URAIAN')) type = 'ESSAY';
 
@@ -1851,62 +1838,209 @@
             },
 
             parseAndImportText(rawText) {
-                if (!rawText.trim()) return this.showToast('Teks kosong atau file gagal dibaca!', 'error');
+                if (!rawText || !rawText.trim()) return this.showToast('Teks kosong atau file gagal dibaca!', 'error');
 
                 const subId = this.teacherSelectedSubject;
                 const pkg = this.teacherSelectedPkg;
                 const parsed = [];
 
-                const blocks = rawText.split(/\[(PG|PGK|ordering|URUTAN|MACHING|MATCHING|JODOH|ESSAY)\]/i);
-                for (let i = 1; i < blocks.length; i += 2) {
-                    const tag = blocks[i].toUpperCase();
-                    const content = blocks[i + 1];
-                    if (!content) continue;
+                const tagRegex = /\[(PG|PGK|SORTING|URUTAN|MATCHING|JODOH|ESSAY)\]/gi;
+                const matches = [...rawText.matchAll(tagRegex)];
+
+                if (matches.length === 0) {
+                    return this.showToast('Format tag tidak ditemukan! Gunakan [PG], [PGK], [SORTING], [MATCHING], atau [ESSAY]', 'warning');
+                }
+
+                for (let i = 0; i < matches.length; i++) {
+                    const currentMatch = matches[i];
+                    const rawTag = currentMatch[1].toUpperCase();
+                    const startIdx = currentMatch.index + currentMatch[0].length;
+                    const endIdx = (i + 1 < matches.length) ? matches[i + 1].index : rawText.length;
+                    const blockText = rawText.substring(startIdx, endIdx).trim();
 
                     let type = 'PG';
-                    if (tag === 'PGK') type = 'PGK';
-                    else if (tag === 'ORDERING' || tag === 'URUTAN') type = 'URUTAN';
-                    else if (tag.includes('MACH') || tag === 'JODOH') type = 'JODOH';
-                    else if (tag === 'ESSAY') type = 'ESSAY';
+                    if (rawTag === 'PGK') type = 'PGK';
+                    else if (rawTag === 'SORTING' || rawTag === 'URUTAN') type = 'URUTAN';
+                    else if (rawTag === 'MATCHING' || rawTag === 'JODOH') type = 'JODOH';
+                    else if (rawTag === 'ESSAY') type = 'ESSAY';
+
+                    let questionText = '';
+                    const qMatch = blockText.match(/@\s*([\s\S]*?)(?=#|\[Kunci:|$)/i);
+                    if (qMatch) {
+                        questionText = qMatch[1].replace(/\|.*\|/g, '').trim();
+                    } else {
+                        const firstPart = blockText.split(/#|\[Kunci:/i)[0];
+                        questionText = firstPart.replace(/^@\s*/, '').replace(/\|.*\|/g, '').trim();
+                    }
+
+                    questionText = questionText.replace(/^[\s\r\n]+|[\s\r\n]+$/g, '').replace(/\|\s*Kolom A\s*\|\s*Kolom B\s*\|/gi, '').trim();
+
+                    let keyStr = '';
+                    const keyMatch = blockText.match(/\[Kunci\s*:\s*([^\]]+)\]/i);
+                    if (keyMatch) {
+                        keyStr = keyMatch[1].trim();
+                    }
+
+                    const rawHashItems = [];
+                    const hashSplit = blockText.split(/#/g);
+                    for (let j = 1; j < hashSplit.length; j++) {
+                        let itemStr = hashSplit[j];
+                        if (itemStr.includes('[Kunci:')) {
+                            itemStr = itemStr.split('[Kunci:')[0];
+                        }
+                        itemStr = itemStr.replace(/\|/g, '').trim();
+                        if (itemStr) rawHashItems.push('#' + itemStr);
+                    }
 
                     const qObj = {
-                        id: 'Q_' + Date.now() + '_' + Math.floor(Math.random() * 100),
+                        id: 'Q_' + Date.now() + '_' + i + '_' + Math.floor(Math.random() * 1000),
                         type: type,
-                        text: content.split('\n')[0].replace(/^\d+[\.\)]\s*/, '').trim(),
+                        text: questionText || 'Pertanyaan Soal',
                         weight: 20
                     };
 
                     if (type === 'PG' || type === 'PGK') {
                         const options = [];
-                        const matches = content.match(/[A-E]\.\s*[^\n]+/g);
-                        if (matches) matches.forEach(m => options.push(m.replace(/^[A-E]\.\s*/, '').trim()));
+                        const optLetterMap = {};
+
+                        rawHashItems.forEach(itemStr => {
+                            const subItems = itemStr.split(/(?=#\s*[A-E]\.)/gi);
+                            subItems.forEach(s => {
+                                const m = s.match(/#\s*([A-E])\.\s*([\s\S]*)/i);
+                                if (m) {
+                                    const letter = m[1].toUpperCase();
+                                    const val = m[2].trim();
+                                    optLetterMap[letter] = val;
+                                }
+                            });
+                        });
+
+                        const letters = ['A', 'B', 'C', 'D', 'E'];
+                        letters.forEach(l => {
+                            if (optLetterMap[l] !== undefined) options.push(optLetterMap[l]);
+                        });
+
+                        if (options.length === 0) {
+                            rawHashItems.forEach(itemStr => {
+                                const cleanVal = itemStr.replace(/^#\s*([A-E]\.|\d+[\.\)]?)?\s*/i, '').trim();
+                                if (cleanVal) options.push(cleanVal);
+                            });
+                        }
+
                         qObj.options = options;
 
-                        const keyMatch = content.match(/\[Kunci\s*:\s*([^\]]+)\]/i);
-                        if (keyMatch) {
-                            const kVal = keyMatch[1].trim();
-                            if (type === 'PG') qObj.correctKey = kVal.charCodeAt(0) - 65;
-                            else qObj.correctKeys = kVal.split(',').map(c => c.trim().charCodeAt(0) - 65);
+                        if (type === 'PG') {
+                            const kLetter = keyStr.toUpperCase().replace(/[^A-E]/g, '');
+                            if (kLetter && letters.includes(kLetter)) {
+                                qObj.correctKey = kLetter.charCodeAt(0) - 65;
+                            } else {
+                                qObj.correctKey = 0;
+                            }
                         } else {
-                            qObj.correctKey = 0;
+                            const selectedKeys = [];
+                            const kLetters = keyStr.toUpperCase().split(/[^A-E]+/);
+                            kLetters.forEach(kl => {
+                                if (kl && letters.includes(kl)) {
+                                    const idx = kl.charCodeAt(0) - 65;
+                                    if (!selectedKeys.includes(idx)) selectedKeys.push(idx);
+                                }
+                            });
+                            qObj.correctKeys = selectedKeys;
                         }
+
                     } else if (type === 'URUTAN') {
-                        const items = content.split('\n').slice(1).map(l => l.replace(/^\d+[\.\)]\s*/, '').trim()).filter(l => l !== '');
-                        qObj.items = items;
-                        qObj.correctOrder = [...items];
+                        const itemLetterMap = {};
+                        const rawItemsList = [];
+
+                        rawHashItems.forEach(itemStr => {
+                            const subItems = itemStr.split(/(?=#\s*[A-E]\.)/gi);
+                            subItems.forEach(s => {
+                                const m = s.match(/#\s*([A-E])\.\s*([\s\S]*)/i);
+                                if (m) {
+                                    const letter = m[1].toUpperCase();
+                                    const val = m[2].trim();
+                                    itemLetterMap[letter] = val;
+                                    rawItemsList.push(val);
+                                }
+                            });
+                        });
+
+                        const letters = ['A', 'B', 'C', 'D', 'E'];
+                        const initialItems = [];
+                        letters.forEach(l => {
+                            if (itemLetterMap[l] !== undefined) initialItems.push(itemLetterMap[l]);
+                        });
+
+                        qObj.items = initialItems.length > 0 ? initialItems : rawItemsList;
+
+                        const keyLetters = keyStr.toUpperCase().split(/[^A-E]+/).filter(x => x);
+                        const targetOrder = [];
+                        keyLetters.forEach(kl => {
+                            if (itemLetterMap[kl]) targetOrder.push(itemLetterMap[kl]);
+                        });
+
+                        qObj.correctOrder = targetOrder.length === initialItems.length ? targetOrder : [...qObj.items];
+
+                    } else if (type === 'JODOH') {
+                        const leftMap = {};
+                        const rightMap = {};
+
+                        rawHashItems.forEach(itemStr => {
+                            const subItems = itemStr.split(/(?=#\s*(?:\d+|[A-E])\.)/gi);
+                            subItems.forEach(s => {
+                                const numMatch = s.match(/#\s*(\d+)\.\s*([\s\S]*)/i);
+                                const letMatch = s.match(/#\s*([A-E])\.\s*([\s\S]*)/i);
+
+                                if (numMatch) {
+                                    const num = numMatch[1];
+                                    let val = numMatch[2].trim().split('#')[0].trim();
+                                    leftMap[num] = val;
+                                } else if (letMatch) {
+                                    const letKey = letMatch[1].toUpperCase();
+                                    let val = letMatch[2].trim().split('#')[0].trim();
+                                    rightMap[letKey] = val;
+                                }
+                            });
+                        });
+
+                        const pairs = [];
+                        const keyPairs = keyStr.split(/[,;\s]+/);
+                        keyPairs.forEach(kp => {
+                            const parts = kp.split(/[-–—→=>]+/);
+                            if (parts.length === 2) {
+                                const lNum = parts[0].trim();
+                                const rLet = parts[1].trim().toUpperCase();
+
+                                const leftVal = leftMap[lNum];
+                                const rightVal = rightMap[rLet];
+
+                                if (leftVal && rightVal) {
+                                    pairs.push({ left: leftVal, right: rightVal });
+                                }
+                            }
+                        });
+
+                        if (pairs.length === 0) {
+                            const leftKeys = Object.keys(leftMap);
+                            leftKeys.forEach(lNum => {
+                                const rLet = String.fromCharCode(64 + parseInt(lNum));
+                                if (leftMap[lNum] && rightMap[rLet]) {
+                                    pairs.push({ left: leftMap[lNum], right: rightMap[rLet] });
+                                }
+                            });
+                        }
+
+                        qObj.pairs = pairs;
+
+                    } else if (type === 'ESSAY') {
+                        qObj.correctKey = keyStr || '';
                     }
 
                     parsed.push(qObj);
                 }
 
                 if (parsed.length === 0) {
-                    parsed.push({
-                        id: 'Q_' + Date.now(),
-                        type: 'PG',
-                        text: rawText.substring(0, 100),
-                        options: ['Opsi A', 'Opsi B', 'Opsi C'],
-                        correctKey: 0
-                    });
+                    return this.showToast('Tidak dapat mengenali format soal pada file/teks!', 'warning');
                 }
 
                 if (!DB.examPackages[subId]) DB.examPackages[subId] = {};
@@ -1921,28 +2055,51 @@
             showTemplateModal() {
                 const body = `
                     <div class="space-y-3">
-                        <p class="font-bold text-slate-800 text-xs">1. Impor dari Excel (.xlsx):</p>
-                        <p class="text-[11px] text-slate-600">Gunakan kolom: <strong>Col A (TIPE)</strong>, <strong>Col B (SOAL)</strong>, <strong>Col C-G (OPSI A-E)</strong>, dan <strong>Col H (KUNCI)</strong>.</p>
-                        <button onclick="EduGuard.downloadQuestionExcelTemplate()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs shadow-sm">
-                            <i class="fa-solid fa-download mr-1"></i> Unduh File Template Excel (.xlsx)
-                        </button>
-                        
+                        <p class="font-bold text-slate-800 text-xs">1. Impor dari Dokumen Word / PDF (Format Tag Resmi):</p>
+                        <div class="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] overflow-x-auto leading-relaxed">
+                            [PG]<br>
+                            @Komponen komputer yang bertugas melakukan perhitungan dan menjalankan instruksi program adalah<br>
+                            #A. RAM<br>
+                            #B. CPU<br>
+                            #C. Monitor<br>
+                            #D. Keyboard<br>
+                            #E. Hard disk<br>
+                            [Kunci: B]<br><br>
+                            [PGK]<br>
+                            @Berikut yang termasuk perangkat keras input adalah<br>
+                            #A. Keyboard<br>
+                            #B. Mouse<br>
+                            #C. Scanner<br>
+                            #D. Monitor<br>
+                            #E. Microphone<br>
+                            [Kunci: A, B, C, E]<br><br>
+                            [SORTING]<br>
+                            @Urutkan proses memasukkan dokumen kertas menjadi file digital menggunakan scanner.<br>
+                            #A. File digital disimpan<br>
+                            #B. Scanner menangkap gambar dokumen<br>
+                            #C. Dokumen diletakkan pada scanner<br>
+                            #D. Komputer menerima hasil pemindaian<br>
+                            #E. Pengguna menjalankan aplikasi scanner<br>
+                            [Kunci: C E B→D→A]<br><br>
+                            [MATCHING]<br>
+                            @Jodohkan Hardware dan Fungsinya<br>
+                            #1. Keyboard #A. Menghasilkan suara<br>
+                            #2. Monitor #B. Memasukkan teks<br>
+                            #3. Speaker #C. Menyimpan data<br>
+                            #4. Scanner #D. Menampilkan informasi<br>
+                            #5. SSD #E. Memindai dokumen<br>
+                            [Kunci: 1-B, 2-D, 3-A, 4-E, 5-C]<br><br>
+                            [ESSAY]<br>
+                            @Jelaskan Tentang software?<br>
+                            [Kunci: Windows]
+                        </div>
+
                         <div class="border-t pt-2">
-                            <p class="font-bold text-slate-800 text-xs mb-1">2. Impor dari Dokumen Word (.docx / .pdf / Teks Tag):</p>
-                            <div class="bg-slate-900 text-emerald-400 p-3 rounded-xl font-mono text-[11px] overflow-x-auto">
-                                [PG]<br>
-                                1. Shortcut Ctrl + C pada komputer digunakan untuk ....<br>
-                                A. Memindahkan data<br>
-                                B. Menyalin data<br>
-                                [Kunci: B]<br><br>
-                                [PGK]<br>
-                                2. Fungsi Ctrl + V dan Ctrl + C adalah ....<br>
-                                A. Menyalin data<br>
-                                B. Menempelkan hasil salinan<br>
-                                [Kunci: A,B]<br><br>
-                                [ESSAY]<br>
-                                3. Jelaskan fungsi Ctrl + C!
-                            </div>
+                            <p class="font-bold text-slate-800 text-xs mb-1">2. Impor dari Excel (.xlsx):</p>
+                            <p class="text-[11px] text-slate-600 mb-2">Gunakan kolom: <strong>TIPE</strong>, <strong>SOAL</strong>, <strong>OPSI_A s/d OPSI_E</strong>, dan <strong>KUNCI</strong>.</p>
+                            <button onclick="EduGuard.downloadQuestionExcelTemplate()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 rounded-lg text-xs shadow-sm">
+                                <i class="fa-solid fa-download mr-1"></i> Unduh File Template Excel (.xlsx)
+                            </button>
                         </div>
                     </div>
                 `;
@@ -1968,7 +2125,6 @@
                             </button>
                         </div>
 
-                        <!-- Admin Tabs Navigation -->
                         <div class="flex overflow-x-auto gap-2 border-b border-slate-100 pb-2 text-xs font-bold">
                             <button onclick="EduGuard.switchAdminTab('publication')" class="px-3.5 py-2 rounded-xl flex items-center gap-1.5 whitespace-nowrap transition ${activeTab === 'publication' ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'text-slate-500 hover:bg-slate-50'}">
                                 <i class="fa-solid fa-bullhorn"></i> 1. Publikasi Paket Soal
@@ -2162,8 +2318,6 @@
                     return `
                         <div class="space-y-6">
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                
-                                <!-- FORM INPUT MANUAL -->
                                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 shadow-sm">
                                     <h4 class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
                                         <i class="fa-solid fa-user-plus text-emerald-600"></i> Input Manual User Baru
@@ -2196,7 +2350,6 @@
                                     </button>
                                 </div>
 
-                                <!-- IMPORT FILE EXCEL / CSV -->
                                 <div class="bg-slate-50 border p-4 rounded-xl space-y-3 flex flex-col justify-between shadow-sm">
                                     <div>
                                         <div class="flex justify-between items-center mb-2">
@@ -2225,10 +2378,8 @@
                                         </button>
                                     </div>
                                 </div>
-
                             </div>
 
-                            <!-- TABEL DAFTAR SEMUA USER -->
                             <div class="space-y-3">
                                 <div class="flex justify-between items-center">
                                     <h4 class="font-bold text-slate-800 text-sm">Daftar Guru & Murid Terdaftar</h4>
@@ -2578,10 +2729,6 @@
         window.onload = function () {
             EduGuard.init();
         };
-
-        function remoteResDataValid(res) {
-            return res && res.status === 'success' && Array.isArray(res.data);
-        }
     </script>
 </body>
 </html>
